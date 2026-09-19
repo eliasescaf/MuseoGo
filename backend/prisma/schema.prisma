@@ -1,0 +1,71 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Camino {
+    id          Int         @id @default(autoincrement())
+    nombre      String  
+    descripcion String
+    duracion    Int
+    activo      Boolean     @default(false)     
+
+    misiones    CaminoMision[]
+
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+}
+
+model Mision {
+    id          Int         @id @default(autoincrement())
+    titulo      String  
+    descripcion String?
+
+    caminos CaminoMision[]
+}
+
+model CaminoMision{
+    caminoId Int
+    misionId Int
+    orden    Int
+
+    camino  Camino  @relation(fields: [caminoId], references: [id], onDelete: Cascade)
+    mision  Mision  @relation(fields: [misionId], references: [id], onDelete: Cascade)
+
+    @@id([caminoId, misionId])
+}
+
+model Objeto {
+    id                  Int         @id @default(autoincrement())
+    nombre              String  
+    descripcion         String
+    datosHistoricos     String?
+    codigoQr            String      @unique
+    imagenUrl           String?
+
+    createdAt           DateTime    @default(now())
+    updatedAt           DateTime    @updatedAt
+
+}
+
+
+model Administrador{
+    id          Int     @id @default(autoincrement())
+    nombre      String  
+    email       String  @unique
+    password    String
+
+    createdAt   DateTime   @default(now())
+
+}
+
+model Visitante{
+    id          Int     @id @default(autoincrement())
+    alias       String  @unique
+
+    createdAt   DateTime   @default(now())   
+}
