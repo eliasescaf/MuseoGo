@@ -62,9 +62,9 @@ export default function AdminLayout() {
       <Tabs.Screen
         name="config"
         options={{
-          title: "Config",
+          title: "Curador/Config",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-sharp" size={24} color={color} />
+            <FontAwesome6 name="robot" size={24} color={color} />
           ),
         }}
       />
@@ -86,6 +86,13 @@ export default function AdminLayout() {
 
         <Tabs.Screen
         name="objetos/[id]"
+        options={{
+            href: null,
+        }}
+        />
+
+        <Tabs.Screen
+        name="caminos/[id]"
         options={{
             href: null,
         }}

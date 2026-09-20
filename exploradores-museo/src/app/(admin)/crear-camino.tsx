@@ -1,6 +1,6 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
@@ -16,6 +16,15 @@ export default function CrearCaminoScreen() {
   const [duracion, setDuracion] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [guardando, setGuardando] = useState(false);
+
+  useFocusEffect(useCallback(()=>{
+    setNombre("");
+    setDuracion("");
+    setDescripcion("");
+  }, [])
+  );
+
+    
 
   const [misionesSeleccionadas, setMisionesSeleccionadas] = useState([
     {id: 1, titulo: "Misión 1"}
@@ -45,7 +54,7 @@ export default function CrearCaminoScreen() {
       
       if(respuesta.ok){
         Alert.alert("Exito", "El camino se creó correctamente");
-        router.back();
+        router.replace("/(admin)/caminos");
       } else {
         Alert.alert("Error", "Hubo un problema al crear el camino");
       }
@@ -62,7 +71,7 @@ export default function CrearCaminoScreen() {
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
         <Pressable 
-          onPress={() => router.back()} 
+          onPress={() => router.replace("/(admin)/caminos")} 
           className="p-2 -ml-2 active:bg-slate-100 rounded-full"
         >
           <Ionicons name="arrow-back" size={24} color="#334155" />

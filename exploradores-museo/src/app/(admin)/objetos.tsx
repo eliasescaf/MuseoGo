@@ -10,14 +10,14 @@ export default function ObjetosScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [objetos, setCaminos] = useState([]);
+  const [objetos, setObjetos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useFocusEffect(useCallback(()=>{
     fetch(`${API_URL}/objetos`)
       .then(response => response.json())
       .then((data) => {
-        setCaminos(data);
+        setObjetos(data);
         setCargando(false);
       }) 
       .catch((error) => {
