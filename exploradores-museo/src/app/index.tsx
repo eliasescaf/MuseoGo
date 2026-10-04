@@ -35,7 +35,7 @@ export default function IndexScreen() {
           <Pressable 
             onPress={() => router.push("/(visitante)/ingreso")} 
             className="flex-row min-h-[76px] items-center gap-4 rounded-3xl bg-white px-5 py-4 shadow-sm border border-slate-200 active:opacity-80"
-            style={{ transform: [{ scale: 1 }] }} // Evita bugs de renderizado con active en algunos celus
+            style={{ transform: [{ scale: 1 }] }} 
           >
             <View className="h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100">
               <FontAwesome6 name="map-location-dot" size={24} color="#3b82f6" />

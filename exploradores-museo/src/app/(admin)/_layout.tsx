@@ -85,6 +85,13 @@ export default function AdminLayout() {
         />
 
         <Tabs.Screen
+        name="crear-mision"
+        options={{
+            href: null,
+        }}
+        />
+
+        <Tabs.Screen
         name="objetos/[id]"
         options={{
             href: null,
@@ -93,6 +100,13 @@ export default function AdminLayout() {
 
         <Tabs.Screen
         name="caminos/[id]"
+        options={{
+            href: null,
+        }}
+        />
+
+        <Tabs.Screen
+        name="misiones/[id]"
         options={{
             href: null,
         }}

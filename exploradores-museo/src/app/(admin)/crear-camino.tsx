@@ -1,7 +1,7 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
 import { useState, useCallback } from "react";
-import { Pressable, ScrollView, Text, TextInput, View, Alert } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, Modal, ActivityIndicator, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -26,9 +26,10 @@ export default function CrearCaminoScreen() {
 
     
 
-  const [misionesSeleccionadas, setMisionesSeleccionadas] = useState([
-    {id: 1, titulo: "Misión 1"}
-  ]);
+  const [misionesSeleccionadas, setMisionesSeleccionadas] = useState<any[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
+  const [cargandoMisiones, setCargandoMisiones] = useState(false);
 
   const guardarCamino = async () => {
     if(!nombre.trim() || !descripcion.trim()){{
@@ -48,7 +49,11 @@ export default function CrearCaminoScreen() {
           nombre: nombre,
           descripcion: descripcion,
           duracion: parseInt(duracion),
-          activo: true
+          activo: true,
+          misiones: misionesSeleccionadas.map((m, index) => ({
+            misionId: m.id,
+            orden: index+1
+          }))
         }),
       });
       
@@ -64,6 +69,38 @@ export default function CrearCaminoScreen() {
     } finally {
       setGuardando(false);
     }
+  }
+
+  const abrirModalMisiones = async () => {
+    setModalVisible(true);
+    setCargandoMisiones(true);
+    try{
+      const respuesta = await fetch(`${API_URL}/misiones`);
+      if(respuesta.ok){
+        const data = await respuesta.json();
+        const misionesActivas = data.filter((m: any) => m.activo);
+        setMisionesDisponibles(misionesActivas);
+      }
+    } 
+    catch(error){
+      console.error(error);
+      Alert.alert("Error", "No se pudieron cargar las misiones");
+    } finally{
+      setCargandoMisiones(false);
+    }
+  }
+
+  const agregarMision = (mision: any) => {
+    if(misionesSeleccionadas.some(m => m.id === mision.id)){
+      Alert.alert("Error", "Esta misión ya fue seleccionada");
+      return;
+    }
+    setMisionesSeleccionadas([...misionesSeleccionadas, mision]);
+    setModalVisible(false);
+  }
+
+  const removerMision = (id: number) => {
+    setMisionesSeleccionadas(misionesSeleccionadas.filter(m=> m.id !== id));
   }
   
   return (
@@ -134,7 +171,7 @@ export default function CrearCaminoScreen() {
             </View>
           </View>
 
-          <Pressable className="flex-row items-center justify-center bg-blue-50 py-3 rounded-xl border border-blue-200 border-dashed mb-4 active:bg-blue-100">
+          <Pressable onPress={abrirModalMisiones} className="flex-row items-center justify-center bg-blue-50 py-3 rounded-xl border border-blue-200 border-dashed mb-4 active:bg-blue-100">
             <FontAwesome6 name="plus" size={16} color="#2563eb" />
             <Text className="text-blue-600 font-bold ml-2">Seleccionar Misión</Text>
           </Pressable>
@@ -146,8 +183,8 @@ export default function CrearCaminoScreen() {
                   <Text className="text-xs font-bold text-slate-500">{index+1}</Text>
                 </View>
                 <Text className="flex-1 font-semibold text-slate-700">{mision.titulo}</Text>
-                <Pressable className="p-1">
-                  <MaterialCommunityIcons name="trash-can-outline" size={20} onChange={() => {}} color="#ef4444" />
+                <Pressable onPress={() => removerMision(mision.id)} className="p-1">
+                  <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
                 </Pressable>
               </View>
             ))}
@@ -163,7 +200,54 @@ export default function CrearCaminoScreen() {
           disabled={guardando} 
         />
       </View>
+      
+      <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+      >
+          <View className="flex-1 justify-end bg-slate-900/50">
+              <View className="bg-white rounded-t-3xl h-3/4 p-6" style={{ paddingBottom: insets.bottom }}>
+                  <View className="flex-row justify-between items-center mb-6">
+                      <View>
+                          <Text className="text-xl font-bold text-slate-800">Agregar Misión</Text>
+                          <Text className="text-sm text-slate-500">Seleccioná un reto para el recorrido</Text>
+                      </View>
+                      <Pressable onPress={() => setModalVisible(false)} className="p-2 bg-slate-100 rounded-full">
+                          <Ionicons name="close" size={24} color="#64748b" />
+                      </Pressable>
+                  </View>
 
+                  {cargandoMisiones ? (
+                      <ActivityIndicator size="large" color="#3B82F6" className="mt-10" />
+                  ) : (
+                      <FlatList 
+                          data={misionesDisponibles}
+                          keyExtractor={(item: any) => item.id.toString()}
+                          showsVerticalScrollIndicator={false}
+                          renderItem={({item}) => (
+                              <Pressable 
+                                  onPress={() => agregarMision(item)}
+                                  className="p-4 rounded-2xl border mb-3 flex-row items-center justify-between border-slate-200 bg-white active:bg-slate-50"
+                              >
+                                  <View className="flex-1 pr-4">
+                                      <Text className="text-base font-bold text-slate-700">{item.titulo}</Text>
+                                      <Text className="text-xs text-slate-500 mt-1" numberOfLines={2}>{item.descripcion || "Sin descripción"}</Text>
+                                  </View>
+                                  <View className="bg-slate-100 px-3 py-1 rounded-full">
+                                      <Text className="text-xs font-bold text-slate-500">{item.tipo}</Text>
+                                  </View>
+                              </Pressable>
+                          )}
+                          ListEmptyComponent={
+                              <Text className="text-center text-slate-500 mt-10 font-medium">No hay misiones disponibles.</Text>
+                          }
+                      />
+                  )}
+              </View>
+          </View>
+      </Modal>
     </View>
   );
 }

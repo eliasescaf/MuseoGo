@@ -12,7 +12,7 @@ model Camino {
     nombre      String  
     descripcion String
     duracion    Int
-    activo      Boolean     @default(false)     
+    activo      Boolean     @default(false)
 
     misiones    CaminoMision[]
 
@@ -24,6 +24,16 @@ model Mision {
     id          Int         @id @default(autoincrement())
     titulo      String  
     descripcion String?
+    tipo        String      
+    activo      Boolean     @default(true)
+    puntos      Int         @default(10)
+    opciones    String?
+    respuestaCorrecta   String?
+
+    objetoId    Int?
+    objeto      Objeto?     @relation(fields: [objetoId], references: [id])
+
+
 
     caminos CaminoMision[]
 }
@@ -46,6 +56,8 @@ model Objeto {
     datosHistoricos     String?
     codigoQr            String      @unique
     imagenUrl           String?
+
+    misiones            Mision[]
 
     createdAt           DateTime    @default(now())
     updatedAt           DateTime    @updatedAt
