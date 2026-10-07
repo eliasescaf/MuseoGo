@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect, useRef } from "react";
-import { Pressable, ScrollView, Text, TextInput, View, Alert, Image, ActivityIndicator } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, Image, ActivityIndicator, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { Button } from "../../../components/ui/button";
@@ -29,6 +29,7 @@ export default function DetalleObjetosScreen(){
     const [datosHistoricos, setDatosHistoricos] = useState("");
     const [codigoQr, setCodigoQr] = useState("");
     const [imagenUrl, setImagenUrl] = useState("");
+    const [activo, setActivo] = useState(true);
     const qrRef = useRef<any>(null);
 
     useEffect(() => {
@@ -42,6 +43,7 @@ export default function DetalleObjetosScreen(){
                     setDatosHistoricos(objeto.datosHistoricos || "");
                     setCodigoQr(objeto.codigoQr);
                     setImagenUrl(objeto.imagenUrl || "");
+                    setActivo(objeto.activo ?? true);
                 } else {
                     Alert.alert("Error", "No se pudo cargar el objeto");
                     router.replace("/(admin)/objetos");
@@ -74,6 +76,7 @@ export default function DetalleObjetosScreen(){
             nombre: nombre,
             descripcion: descripcion,
             datosHistoricos: datosHistoricos,
+            activo: activo
           })
         });
 
@@ -210,6 +213,21 @@ export default function DetalleObjetosScreen(){
         </View>
 
         <View className="gap-6 pb-20">
+          <View className="flex-row items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <View className="flex-1 mr-4">
+              <Text className="text-base font-bold text-slate-800">Objeto Activo</Text>
+              <Text className="text-xs text-slate-500 mt-1">
+                {activo ? "Visible" : "Oculto"}
+              </Text>
+            </View>
+            <Switch 
+              value={activo}
+              onValueChange={setActivo}
+              trackColor={{ false: "#cbd5e1", true: "#bfdbfe" }}
+              thumbColor={activo ? "#2563eb" : "#f8fafc"}
+            />
+          </View>
+
           <View>
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre del objeto</Text>
             <Input value={nombre} onChangeText={setNombre} />

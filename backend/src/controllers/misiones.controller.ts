@@ -3,7 +3,7 @@ import {prisma} from '../prisma';
 
 export const getMisiones = async(req: Request, res: Response) => {
     try{
-        const misiones = await prisma.mision.findMany();
+        const misiones = await prisma.mision.findMany({include: {objeto: true}});
         res.json(misiones);
     }
     catch(error){

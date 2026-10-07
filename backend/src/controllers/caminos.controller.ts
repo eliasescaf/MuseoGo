@@ -49,7 +49,13 @@ export const getCaminoById = async (req: Request, res: Response) => {
             where: { id: Number(id) },
             include: {
                 misiones: {
-                    include: { mision: true },
+                    include: { 
+                        mision: {
+                            include: {
+                                objeto: true 
+                            }
+                        }
+                    },
                     orderBy: { orden: 'asc' } 
                 }
             }

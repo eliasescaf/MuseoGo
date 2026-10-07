@@ -67,7 +67,8 @@ export const updateObjeto = async (req: Request, res: Response) => {
                 nombre: datos.nombre,
                 descripcion: datos.descripcion,
                 datosHistoricos: datos.datosHistoricos,
-                ...(datos.imagenUrl && {imagenUrl: datos.imagenUrl})
+                ...(datos.imagenUrl && {imagenUrl: datos.imagenUrl}),
+                activo: datos.activo
             }
         });
 

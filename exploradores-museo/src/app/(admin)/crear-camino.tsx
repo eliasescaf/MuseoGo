@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 
-import {API_URL} from "../../config/api";
+import { API_URL } from "../../config/api";
 
 export default function CrearCaminoScreen() {
   const router = useRouter();
@@ -24,18 +24,16 @@ export default function CrearCaminoScreen() {
   }, [])
   );
 
-    
-
   const [misionesSeleccionadas, setMisionesSeleccionadas] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
   const [cargandoMisiones, setCargandoMisiones] = useState(false);
 
   const guardarCamino = async () => {
-    if(!nombre.trim() || !descripcion.trim()){{
+    if(!nombre.trim() || !descripcion.trim()){
       Alert.alert("Error", "El nombre y la descripción son obligatorios.");
       return;
-    }}
+    }
 
     setGuardando(true);
 
@@ -48,7 +46,7 @@ export default function CrearCaminoScreen() {
         body: JSON.stringify({
           nombre: nombre,
           descripcion: descripcion,
-          duracion: parseInt(duracion),
+          duracion: parseInt(duracion) || 0,
           activo: true,
           misiones: misionesSeleccionadas.map((m, index) => ({
             misionId: m.id,
@@ -78,8 +76,11 @@ export default function CrearCaminoScreen() {
       const respuesta = await fetch(`${API_URL}/misiones`);
       if(respuesta.ok){
         const data = await respuesta.json();
-        const misionesActivas = data.filter((m: any) => m.activo);
-        setMisionesDisponibles(misionesActivas);
+        
+        // EL FILTRO CLAVE: Solo misiones activas y cuyos objetos (si existen) también estén activos
+        const misionesSanas = data.filter((m: any) => m.activo && (!m.objeto || m.objeto.activo !== false));
+        
+        setMisionesDisponibles(misionesSanas);
       }
     } 
     catch(error){
@@ -179,11 +180,11 @@ export default function CrearCaminoScreen() {
           <View className="gap-2">
             {misionesSeleccionadas.map((mision, index) => (
               <View key={mision.id} className="flex-row items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <View className="bg-slate-50 h-6 w-6 items-center justify-center mr-3">
-                  <Text className="text-xs font-bold text-slate-500">{index+1}</Text>
+                <View className="bg-slate-200 h-6 w-6 rounded-full items-center justify-center mr-3">
+                  <Text className="text-xs font-bold text-slate-700">{index+1}</Text>
                 </View>
                 <Text className="flex-1 font-semibold text-slate-700">{mision.titulo}</Text>
-                <Pressable onPress={() => removerMision(mision.id)} className="p-1">
+                <Pressable onPress={() => removerMision(mision.id)} className="p-2 active:bg-red-50 rounded-lg">
                   <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
                 </Pressable>
               </View>
@@ -195,7 +196,7 @@ export default function CrearCaminoScreen() {
       <View className="p-6 border-t border-slate-100 bg-white" style={{ paddingBottom: insets.bottom + 20 }}>
         <Button 
           label="Guardar Camino" 
-          className="w-full bg-blue-600 rounded-full h-14"
+          className="w-full bg-blue-600 rounded-2xl h-14"
           onPress={guardarCamino}
           disabled={guardando} 
         />

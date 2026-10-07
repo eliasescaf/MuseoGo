@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCallback, useState } from "react";
 
-import {API_URL} from "../../config/api";
+import { API_URL } from "../../config/api";
 
 export default function MisionesScreen() {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function MisionesScreen() {
       fetchMisiones();
     }, [])
   );
+
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
       
@@ -71,40 +72,56 @@ export default function MisionesScreen() {
           ): misiones.length === 0 ? (
             <Text className="text-center font-medium text-slate-400">No hay misiones disponibles</Text>
           ) : (
-            misiones.map((mision: any) => (
-            <Pressable
-              onPress={() => router.push(`/(admin)/misiones/${mision.id}`)} 
-              key={mision.id}
-              className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 active:bg-slate-50"
-            >
-              <View className="flex-1 pr-4"> 
-                <Text className="text-base font-bold text-slate-700">
-                  {mision.titulo}
-                </Text>
-                <Text className="text-xs font-medium text-slate-500 mt-1" numberOfLines={1}>
-                    {mision.descripcion}
-                </Text>
-              </View>
+            misiones.map((mision: any) => {
+              const dependeObjetoInactivo = mision.objeto && mision.objeto.activo === false;
 
-              <View className="items-end gap-2"> 
-                
-                {mision.duracion ? (
-                  <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                    <Ionicons name="time-outline" size={12} color="#64748b" />
-                    <Text className="text-[10px] font-bold text-slate-500 ml-1">
-                      {mision.duracion} min
+              return (
+                <Pressable
+                  onPress={() => router.push(`/(admin)/misiones/${mision.id}`)} 
+                  key={mision.id}
+                  className={`flex-row items-center justify-between p-4 rounded-2xl border ${
+                    dependeObjetoInactivo 
+                      ? 'bg-slate-100 border-slate-200 opacity-80' 
+                      : 'bg-white border-slate-200 active:bg-slate-50'
+                  }`}
+                >
+                  <View className="flex-1 pr-4"> 
+                    <Text className={`text-base font-bold ${dependeObjetoInactivo ? 'text-slate-500' : 'text-slate-700'}`}>
+                      {mision.titulo}
                     </Text>
+                    <Text className="text-xs font-medium text-slate-500 mt-1" numberOfLines={1}>
+                        {mision.descripcion}
+                    </Text>
+                    {dependeObjetoInactivo && (
+                      <View className="flex-row items-center mt-2 bg-amber-100 self-start px-2 py-1 rounded-md">
+                        <Ionicons name="warning-outline" size={12} color="#d97706" />
+                        <Text className="text-[10px] font-bold text-amber-700 ml-1">
+                          Objeto inactivo
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                ) : null}
-                <View className={`px-3 py-1 rounded-full ${mision.activo ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-                  <Text className={`text-[10px] font-bold ${mision.activo ? 'text-emerald-700' : 'text-slate-500'}`}>
-                    {mision.activo ? 'ACTIVO' : 'INACTIVO'}
-                  </Text>
-                </View>
 
-              </View>
-            </Pressable>
-          )))}
+                  <View className="items-end gap-2 shrink-0"> 
+                    {mision.duracion ? (
+                      <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                        <Ionicons name="time-outline" size={12} color="#64748b" />
+                        <Text className="text-[10px] font-bold text-slate-500 ml-1">
+                          {mision.duracion} min
+                        </Text>
+                      </View>
+                    ) : null}
+                    
+                    <View className={`px-3 py-1 rounded-full ${mision.activo ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                      <Text className={`text-[10px] font-bold ${mision.activo ? 'text-emerald-700' : 'text-slate-500'}`}>
+                        {mision.activo ? 'ACTIVO' : 'INACTIVO'}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )
+            })
+          )}
         </View>
       </ScrollView>
     </View>

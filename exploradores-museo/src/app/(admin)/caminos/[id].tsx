@@ -1,7 +1,7 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Modal, FlatList } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { API_URL } from "../../../config/api";
@@ -26,12 +26,12 @@ export default function DetalleCaminoScreen(){
     const [activo, setActivo] = useState(true);
     const [misionesSeleccionadas, setMisionesSeleccionadas] = useState<any[]>([]);
 
-    // Estados para el Modal de Misiones
     const [modalVisible, setModalVisible] = useState(false);
     const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
     const [cargandoMisiones, setCargandoMisiones] = useState(false);
 
-    useEffect(() => {
+    useFocusEffect(
+        useCallback(() => {
         const cargarCamino = async () => {
             try {
                 const respuesta = await fetch(`${API_URL}/caminos/${id}`)
@@ -42,13 +42,14 @@ export default function DetalleCaminoScreen(){
                     setDuracion(camino.duracion ? camino.duracion.toString() : "");
                     setActivo(camino.activo);
 
-                    // Extraemos las misiones de la tabla intermedia (CaminoMision)
                     if (camino.misiones) {
                         const misionesMapeadas = camino.misiones.map((relacion: any) => ({
                             id: relacion.mision.id,
                             titulo: relacion.mision.titulo,
                             tipo: relacion.mision.tipo,
-                            descripcion: relacion.mision.descripcion
+                            descripcion: relacion.mision.descripcion,
+                            activo: relacion.mision.activo, // Capturamos estado de la misión
+                            objeto: relacion.mision.objeto  // Capturamos el objeto asociado
                         }));
                         setMisionesSeleccionadas(misionesMapeadas);
                     }
@@ -64,7 +65,10 @@ export default function DetalleCaminoScreen(){
             }
         }
         cargarCamino();
-    }, [id]);
+
+        return () => {};
+    }, [id])
+    );
     
     const editarCamino = async () => {
         try {
@@ -83,7 +87,6 @@ export default function DetalleCaminoScreen(){
                     descripcion,
                     duracion: Number(duracion),
                     activo,
-                    // Enviamos las misiones actualizadas y ordenadas al backend
                     misiones: misionesSeleccionadas.map((m, index) => ({
                         misionId: m.id,
                         orden: index + 1
@@ -130,7 +133,6 @@ export default function DetalleCaminoScreen(){
         ]);
     };
 
-    // --- Funciones para manejar el Modal de Misiones ---
     const abrirModalMisiones = async () => {
         setModalVisible(true);
         setCargandoMisiones(true);
@@ -138,7 +140,9 @@ export default function DetalleCaminoScreen(){
             const respuesta = await fetch(`${API_URL}/misiones`);
             if (respuesta.ok) {
                 const data = await respuesta.json();
-                setMisionesDisponibles(data.filter((m: any) => m.activo));
+                // Filtramos para que el admin solo pueda agregar misiones sanas (activas y sin objetos inactivos)
+                const misionesSanas = data.filter((m: any) => m.activo && (!m.objeto || m.objeto.activo !== false));
+                setMisionesDisponibles(misionesSanas);
             }
         } catch (error) {
             console.error(error);
@@ -219,17 +223,53 @@ export default function DetalleCaminoScreen(){
                     </Pressable>
 
                     <View className="gap-2">
-                        {misionesSeleccionadas.map((mision, index) => (
-                            <View key={mision.id} className="flex-row items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <View className="bg-slate-200 h-6 w-6 rounded-full items-center justify-center mr-3">
-                                    <Text className="text-xs font-bold text-slate-700">{index + 1}</Text>
+                        {misionesSeleccionadas.map((mision, index) => {
+                            // Evaluamos si debe mostrarse gris/inactiva
+                            const misionInactiva = mision.activo === false;
+                            const objetoInactivo = mision.objeto && mision.objeto.activo === false;
+                            const estaDeshabilitada = misionInactiva || objetoInactivo;
+
+                            return (
+                                <View 
+                                    key={mision.id} 
+                                    className={`flex-row items-center p-3 rounded-xl border ${estaDeshabilitada ? 'bg-slate-100 border-slate-200 opacity-80' : 'bg-slate-50 border-slate-200'}`}
+                                >
+                                    <View className="bg-slate-200 h-6 w-6 rounded-full items-center justify-center mr-3">
+                                        <Text className="text-xs font-bold text-slate-700">{index + 1}</Text>
+                                    </View>
+                                    
+                                    <View className="flex-1 pr-2">
+                                        <Text className={`font-semibold ${estaDeshabilitada ? 'text-slate-500' : 'text-slate-700'}`}>
+                                            {mision.titulo}
+                                        </Text>
+                                        
+                                        {/* Alerta de Objeto Inactivo */}
+                                        {objetoInactivo && (
+                                            <View className="flex-row items-center mt-1">
+                                                <Ionicons name="warning-outline" size={12} color="#d97706" />
+                                                <Text className="text-[10px] font-bold text-amber-700 ml-1">
+                                                    Objeto inactivo (Paso bloqueado)
+                                                </Text>
+                                            </View>
+                                        )}
+                                        
+                                        {/* Alerta de Misión Inactiva */}
+                                        {misionInactiva && !objetoInactivo && (
+                                            <View className="flex-row items-center mt-1">
+                                                <Ionicons name="eye-off-outline" size={12} color="#475569" />
+                                                <Text className="text-[10px] font-bold text-slate-500 ml-1">
+                                                    Misión inactiva manualmente
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    <Pressable onPress={() => removerMision(mision.id)} className="p-2 active:bg-red-50 rounded-lg">
+                                        <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
+                                    </Pressable>
                                 </View>
-                                <Text className="flex-1 font-semibold text-slate-700">{mision.titulo}</Text>
-                                <Pressable onPress={() => removerMision(mision.id)} className="p-2 active:bg-red-50 rounded-lg">
-                                    <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
-                                </Pressable>
-                            </View>
-                        ))}
+                            );
+                        })}
                     </View>
                 </View>
 

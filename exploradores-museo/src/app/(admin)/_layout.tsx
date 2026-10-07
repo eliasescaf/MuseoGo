@@ -25,24 +25,24 @@ export default function AdminLayout() {
         }
       }}
     >
-      {/* Pestaña 1: Misiones */}
-      <Tabs.Screen
-        name="misiones"
-        options={{
-          title: "Misiones",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="flag-checkered" size={22} color={color} />
-          ),
-        }}
-      />
-
-      {/* Pestaña 2: Caminos */}
+      {/* Pestaña 1: Caminos */}
       <Tabs.Screen
         name="caminos"
         options={{
           title: "Caminos",
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="route" size={22} color={color} />
+          ),
+        }}
+      />
+
+      {/* Pestaña 2: Misiones */}
+      <Tabs.Screen
+        name="misiones"
+        options={{
+          title: "Misiones",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6 name="flag-checkered" size={22} color={color} />
           ),
         }}
       />
@@ -107,6 +107,13 @@ export default function AdminLayout() {
 
         <Tabs.Screen
         name="misiones/[id]"
+        options={{
+            href: null,
+        }}
+        />
+
+        <Tabs.Screen
+        name="ingreso"
         options={{
             href: null,
         }}

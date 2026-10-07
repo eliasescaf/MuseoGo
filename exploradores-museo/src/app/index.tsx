@@ -58,7 +58,7 @@ export default function IndexScreen() {
           </Pressable>
 
           <Pressable 
-            onPress={() => router.push("/(admin)/misiones")}
+            onPress={() => router.push("/admin-login")}
             className="flex-row min-h-[76px] items-center gap-4 rounded-3xl bg-sky-50/50 px-5 py-4 border border-slate-200/60 active:opacity-80"
           >
             <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-200/50">
