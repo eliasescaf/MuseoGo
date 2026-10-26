@@ -101,7 +101,7 @@ export default function DetalleCaminoScreen() {
                 {/* Timeline de Misiones */}
                 <View className="px-6 mt-2">
                     <Text className="text-lg font-bold text-slate-800 mb-6">
-                        Misiones del Recorrido
+                        Misiones del Camino
                     </Text>
 
                     {camino.misiones?.length > 0 ? (
@@ -167,7 +167,7 @@ export default function DetalleCaminoScreen() {
                         }`}
                     >
                         <Text className="text-white font-bold text-lg mr-2">
-                            Iniciar Recorrido
+                            Iniciar Camino
                         </Text>
                         {camino.misiones?.length > 0 && (
                             <Ionicons name="play" size={20} color="white" />

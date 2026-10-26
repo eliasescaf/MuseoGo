@@ -79,7 +79,7 @@ export default function ProgresoScreen() {
                 </Text>
                 <Text className="text-slate-500 font-medium mt-2">
                     {progreso && progreso.caminosCompletados.length > 0
-                        ? 'Estos son los recorridos que ya completaste.'
+                        ? 'Estos son los caminos que ya completaste.'
                         : 'Completá misiones en un camino para ver acá tus puntos y tu avance.'}
                 </Text>
             </View>

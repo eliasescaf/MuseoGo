@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -120,7 +120,8 @@ export default function MisionActivaScreen() {
 
     return (
         <View key="contenido" className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
-            {estadoResolucion === 'PENDIENTE' && mision.tipo !== 'QR_OBJETO' && (
+            {/* Header para todas las misiones */}
+            {estadoResolucion === 'PENDIENTE' && (
                 <View className="px-6 py-4 flex-row items-center justify-between border-b border-slate-200 bg-white shadow-sm z-10">
                     <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100">
                         <Ionicons name="close" size={24} color="#64748b" />
@@ -135,17 +136,32 @@ export default function MisionActivaScreen() {
             <View className="flex-1">
                 {estadoResolucion === 'PENDIENTE' ? (
                     <View className="flex-1">
-                        {mision.tipo === 'QR_OBJETO' && <EscanerQR mision={mision} onEvaluar={manejarCompletado} />}
-                        
-                        {mision.tipo !== 'QR_OBJETO' && (
-                            <View className="px-6 py-6 bg-white shadow-sm mb-4">
-                                <Text className="text-2xl font-black text-slate-800 mb-2">{mision.titulo}</Text>
-                                <Text className="text-base text-slate-600 leading-relaxed">{mision.descripcion}</Text>
-                            </View>
-                        )}
+                        {/* FLUJO ESPECIAL PARA QR_OBJETO */}
+                        {mision.tipo === 'QR_OBJETO' ? (
+                            <>
+                                {/* Contexto compacto arriba */}
+                                <View className="px-6 py-6 bg-white shadow-sm">
+                                    <Text className="text-2xl font-black text-slate-800 mb-2">{mision.titulo}</Text>
+                                    <Text className="text-base text-slate-600 leading-relaxed">{mision.descripcion}</Text>
+                                </View>
+                                
+                                {/* Cámara ocupa el resto */}
+                                <View className="flex-1">
+                                    <EscanerQR mision={mision} onEvaluar={manejarCompletado} />
+                                </View>
+                            </>
+                        ) : (
+                            /* FLUJOS PARA TRIVIA Y EXPLICACION */
+                            <>
+                                <View className="px-6 py-6 bg-white shadow-sm mb-4">
+                                    <Text className="text-2xl font-black text-slate-800 mb-2">{mision.titulo}</Text>
+                                    <Text className="text-base text-slate-600 leading-relaxed">{mision.descripcion}</Text>
+                                </View>
 
-                        {mision.tipo === 'TRIVIA' && <TriviaOpciones mision={mision} onEvaluar={manejarCompletado} />}
-                        {mision.tipo === 'EXPLICACION' && <RespuestaIA mision={mision} onEvaluar={manejarCompletado} />}
+                                {mision.tipo === 'TRIVIA' && <TriviaOpciones mision={mision} onEvaluar={manejarCompletado} />}
+                                {mision.tipo === 'EXPLICACION' && <RespuestaIA mision={mision} onEvaluar={manejarCompletado} />}
+                            </>
+                        )}
                     </View>
                 ) : (
                     <View className="flex-1 items-center justify-center px-6">
@@ -184,7 +200,7 @@ export default function MisionActivaScreen() {
                             className={`w-full h-14 rounded-2xl items-center justify-center flex-row ${comunicarContinuar ? 'bg-blue-600' : 'bg-slate-800'}`}
                         >
                             <Text className="text-white font-bold text-lg mr-2">
-                                {comunicarContinuar ? 'Continuar Recorrido' : 'Reintentar'}
+                                {comunicarContinuar ? 'Continuar Camino' : 'Reintentar'}
                             </Text>
                             <Ionicons name={comunicarContinuar ? "arrow-forward" : "refresh"} size={20} color="white" />
                         </Pressable>

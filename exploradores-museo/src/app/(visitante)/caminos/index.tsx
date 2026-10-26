@@ -51,7 +51,7 @@ export default function CaminosVisitanteScreen() {
                     ¡Hola, {alias}!
                 </Text>
                 <Text className="text-slate-500 font-medium mt-2">
-                    Elegí un recorrido para empezar tu aventura en el museo.
+                    Elegí un camino para empezar tu aventura en el museo.
                 </Text>
             </View>
 

@@ -17,7 +17,7 @@ export default function ResultadosCaminoScreen() {
         puntosObtenidos: 0,
         misionesCorrectas: 0,
         totalMisiones: 0,
-        tituloCamino: 'Tu Recorrido'
+        tituloCamino: 'Tu Camino'
     });
 
     useEffect(() => {
@@ -32,7 +32,7 @@ export default function ResultadosCaminoScreen() {
                         puntosObtenidos: data.puntosGanados || 0,
                         misionesCorrectas: data.misionesCorrectas || 0,
                         totalMisiones: data.totalMisiones || 0,
-                        tituloCamino: data.camino?.titulo || 'Recorrido Completado'
+                        tituloCamino: data.camino?.titulo || 'Camino Completado'
                     });
                 }
             } catch (error) {
