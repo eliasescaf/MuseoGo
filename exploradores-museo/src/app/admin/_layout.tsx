@@ -1,5 +1,5 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AdminLayout() {
@@ -31,7 +31,7 @@ export default function AdminLayout() {
         options={{
           title: "Caminos",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="route" size={22} color={color} />
+            <FontAwesome6 name="route" size={22} color={color as string} />
           ),
         }}
       />
@@ -42,7 +42,7 @@ export default function AdminLayout() {
         options={{
           title: "Misiones",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="flag-checkered" size={22} color={color} />
+            <FontAwesome6 name="flag-checkered" size={22} color={color as string} />
           ),
         }}
       />
@@ -53,7 +53,7 @@ export default function AdminLayout() {
         options={{
           title: "Objetos",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="cube-scan" size={26} color={color} />
+            <MaterialCommunityIcons name="cube-scan" size={26} color={color as string} />
           ),
         }}
       />
@@ -64,7 +64,7 @@ export default function AdminLayout() {
         options={{
           title: "Curador/Config",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="robot" size={24} color={color} />
+            <FontAwesome6 name="robot" size={24} color={color as string} />
           ),
         }}
       />
@@ -73,49 +73,48 @@ export default function AdminLayout() {
         <Tabs.Screen
         name="crear-camino"
         options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
 
         <Tabs.Screen
         name="crear-objeto"
         options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
 
         <Tabs.Screen
         name="crear-mision"
         options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
 
         <Tabs.Screen
         name="objetos/[id]"
         options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
 
         <Tabs.Screen
         name="caminos/[id]"
         options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
 
         <Tabs.Screen
         name="misiones/[id]"
         options={{
-            href: null,
-        }}
-        />
-
-        <Tabs.Screen
-        name="ingreso"
-        options={{
-            href: null,
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
         }}
         />
     </Tabs>

@@ -57,7 +57,7 @@ export default function CrearCaminoScreen() {
       
       if(respuesta.ok){
         Alert.alert("Exito", "El camino se creó correctamente");
-        router.replace("/(admin)/caminos");
+        router.replace("/admin/caminos");
       } else {
         Alert.alert("Error", "Hubo un problema al crear el camino");
       }
@@ -109,7 +109,7 @@ export default function CrearCaminoScreen() {
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
         <Pressable 
-          onPress={() => router.replace("/(admin)/caminos")} 
+          onPress={() => router.replace("/admin/caminos")} 
           className="p-2 -ml-2 active:bg-slate-100 rounded-full"
         >
           <Ionicons name="arrow-back" size={24} color="#334155" />

@@ -26,10 +26,10 @@ const TIPOS_MISION = [
         textColor: "text-violet-600"
     },
     {
-        id: "ACERTIJO",
-        titulo: "Adivinanza",
-        descripcion: "Texto libre donde deben adivinar una palabra",
-        icono: "head-lightbulb-outline",
+        id: "EXPLICACION",
+        titulo: "Respuesta abierta",
+        descripcion: "El visitante explica con sus palabras y la IA evalúa la respuesta",
+        icono: "text-box-edit-outline",
         color: "bg-amber-500",
         colorLight: "bg-amber-50",
         textColor: "text-amber-600"
@@ -47,7 +47,7 @@ export default function CrearMisionScreen() {
     const [opcionA, setOpcionA] = useState("");
     const [opcionB, setOpcionB] = useState("");
     const [opcionC, setOpcionC] = useState("");
-    const [respuestaAcertijo, setRespuestaAcertijo] = useState("");
+    const [respuestaEsperada, setRespuestaEsperada] = useState("");
     const [objetoId, setObjetoId] = useState(null);
 
     const [objetos, setObjetos] = useState([]);
@@ -64,7 +64,7 @@ export default function CrearMisionScreen() {
         setOpcionA("");
         setOpcionB("");
         setOpcionC("");
-        setRespuestaAcertijo("");
+        setRespuestaEsperada("");
         setObjetoId(null);
         }, [])
       );
@@ -72,6 +72,11 @@ export default function CrearMisionScreen() {
     const guardarMision = async () => {
         if(!titulo.trim() || !tipoSeleccionado){
           Alert.alert("Error", "El titulo y el tipo son obligatorios");
+          return;
+        }
+
+        if (tipoSeleccionado === "EXPLICACION" && !respuestaEsperada.trim()) {
+          Alert.alert("Error", "La respuesta esperada es obligatoria para una respuesta abierta");
           return;
         }
 
@@ -89,8 +94,8 @@ export default function CrearMisionScreen() {
       if(tipoSeleccionado === "TRIVIA"){
         payload.opciones = [opcionA, opcionB, opcionC];
         payload.respuestaCorrecta = opcionA
-      }else if(tipoSeleccionado === "ACERTIJO"){
-        payload.respuestaCorrecta = respuestaAcertijo;
+      }else if(tipoSeleccionado === "EXPLICACION"){
+        payload.respuestaCorrecta = respuestaEsperada.trim();
       }
 
       try {
@@ -195,11 +200,13 @@ export default function CrearMisionScreen() {
                             />
                         </View>
                         <View className="mb-6">
-                            <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Descripción (Opcional)</Text>
+                            <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
+                                {tipoSeleccionado === "EXPLICACION" ? "Consigna para el visitante" : "Descripción (Opcional)"}
+                            </Text>
                             <TextInput 
                                 value={descripcion}
                                 onChangeText={setDescripcion}
-                                placeholder="Explicá de qué trata la misión..."
+                                placeholder={tipoSeleccionado === "EXPLICACION" ? "Ej: Explicá con tus palabras por qué esta pieza es importante." : "Explicá de qué trata la misión..."}
                                 multiline
                                 numberOfLines={3}
                                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800"
@@ -217,14 +224,18 @@ export default function CrearMisionScreen() {
                             />
                         </View>
 
-                        {tipoSeleccionado === "QR_OBJETO" && (
+                        {(tipoSeleccionado === "QR_OBJETO" || tipoSeleccionado === "EXPLICACION") && (
                             <Pressable 
                                 onPress={abrirModalObjetos}
                                 className="bg-blue-50 p-4 rounded-2xl border border-blue-200 items-center justify-center py-6 border-dashed active:bg-blue-100"
                             >
-                                <MaterialCommunityIcons name="cube-scan" size={32} color="#3b82f6" />
+                                <MaterialCommunityIcons name={tipoSeleccionado === "EXPLICACION" ? "cube-outline" : "cube-scan"} size={32} color="#3b82f6" />
                                 <Text className="text-blue-700 font-bold mt-2 text-center">
-                                    {objetoId ? `Objeto seleccionado: ${nombreObjeto}` : "Tocar para seleccionar un Objeto del museo"}
+                                    {objetoId
+                                        ? `Objeto seleccionado: ${nombreObjeto}`
+                                        : tipoSeleccionado === "EXPLICACION"
+                                            ? "Tocar para vincular la pieza (opcional)"
+                                            : "Tocar para seleccionar un Objeto del museo"}
                                 </Text>
                             </Pressable>
                         )}
@@ -236,9 +247,21 @@ export default function CrearMisionScreen() {
                             </View>
                         )}
 
-                        {tipoSeleccionado === "ACERTIJO" && (
+                        {tipoSeleccionado === "EXPLICACION" && (
                             <View>
-                                <TextInput value={respuestaAcertijo} onChangeText={setRespuestaAcertijo} placeholder="Palabra clave o respuesta secreta" className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base" />
+                                <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Respuesta esperada (referencia para la IA)</Text>
+                                <TextInput
+                                    value={respuestaEsperada}
+                                    onChangeText={setRespuestaEsperada}
+                                    placeholder="Ej: La pieza es importante porque muestra cómo se usaba en la vida cotidiana y qué técnicas desarrollaron."
+                                    multiline
+                                    numberOfLines={4}
+                                    className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-slate-800"
+                                    style={{ minHeight: 110, textAlignVertical: 'top' }}
+                                />
+                                <Text className="text-xs text-slate-500 mt-2 ml-1">
+                                    La IA compara la respuesta del visitante contra esta referencia. Escribí una respuesta modelo completa.
+                                </Text>
                             </View>
                         )}
                     </View>

@@ -46,7 +46,7 @@ export default function MisionesScreen() {
       <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         
         <Pressable 
-          onPress={() => router.push("/(admin)/crear-mision")} 
+          onPress={() => router.push("/admin/crear-mision")} 
           className="flex-row items-center gap-4 rounded-3xl bg-blue-500 px-5 py-4 shadow-sm active:bg-blue-600 mb-8"
         >
           <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
@@ -77,7 +77,7 @@ export default function MisionesScreen() {
 
               return (
                 <Pressable
-                  onPress={() => router.push(`/(admin)/misiones/${mision.id}`)} 
+                  onPress={() => router.push(`/admin/misiones/${mision.id}`)} 
                   key={mision.id}
                   className={`flex-row items-center justify-between p-4 rounded-2xl border ${
                     dependeObjetoInactivo 

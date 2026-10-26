@@ -7,3 +7,5 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - expo-image-picker@57.0.19
+patchedDependencies:
+  react-native-css-interop@0.2.7: patches/react-native-css-interop@0.2.7.patch

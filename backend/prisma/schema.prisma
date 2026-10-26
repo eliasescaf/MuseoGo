@@ -1,84 +1,116 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Camino {
-    id          Int         @id @default(autoincrement())
-    nombre      String  
-    descripcion String
-    duracion    Int
-    activo      Boolean     @default(false)
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  descripcion String
+  duracion    Int
+  activo      Boolean @default(false)
 
-    misiones    CaminoMision[]
+  misiones         CaminoMision[]
+  visitantesLogros CaminoCompletado[]
 
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Mision {
-    id          Int         @id @default(autoincrement())
-    titulo      String  
-    descripcion String?
-    tipo        String      
-    activo      Boolean     @default(true)
-    puntos      Int         @default(10)
-    opciones    String?
-    respuestaCorrecta   String?
+  id                Int     @id @default(autoincrement())
+  titulo            String
+  descripcion       String?
+  tipo              String
+  activo            Boolean @default(true)
+  puntos            Int     @default(10)
+  opciones          String?
+  respuestaCorrecta String?
 
-    objetoId    Int?
-    objeto      Objeto?     @relation(fields: [objetoId], references: [id], onDelete: Cascade)
+  objetoId Int?
+  objeto   Objeto? @relation(fields: [objetoId], references: [id], onDelete: Cascade)
 
-
-
-    caminos CaminoMision[]
+  caminos  CaminoMision[]
+  intentos IntentoMision[]
 }
 
-model CaminoMision{
-    caminoId Int
-    misionId Int
-    orden    Int
+model CaminoMision {
+  caminoId Int
+  misionId Int
+  orden    Int
 
-    camino  Camino  @relation(fields: [caminoId], references: [id], onDelete: Cascade)
-    mision  Mision  @relation(fields: [misionId], references: [id], onDelete: Cascade)
+  camino Camino @relation(fields: [caminoId], references: [id], onDelete: Cascade)
+  mision Mision @relation(fields: [misionId], references: [id], onDelete: Cascade)
 
-    @@id([caminoId, misionId])
+  @@id([caminoId, misionId])
 }
 
 model Objeto {
-    id                  Int         @id @default(autoincrement())
-    nombre              String  
-    descripcion         String
-    datosHistoricos     String?
-    codigoQr            String      @unique
-    imagenUrl           String?
-    activo              Boolean     @default(true)
+  id              Int     @id @default(autoincrement())
+  nombre          String
+  descripcion     String
+  datosHistoricos String?
+  codigoQr        String  @unique
+  imagenUrl       String?
+  activo          Boolean @default(true)
 
-    misiones            Mision[]
+  misiones Mision[]
 
-    createdAt           DateTime    @default(now())
-    updatedAt           DateTime    @updatedAt
-
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+model Administrador {
+  id       Int    @id @default(autoincrement())
+  nombre   String
+  email    String @unique
+  password String
 
-model Administrador{
-    id          Int     @id @default(autoincrement())
-    nombre      String  
-    email       String  @unique
-    password    String
-
-    createdAt   DateTime   @default(now())
-
+  createdAt DateTime @default(now())
 }
 
-model Visitante{
-    id          Int     @id @default(autoincrement())
-    alias       String  @unique
+model Visitante {
+  id            Int    @id @default(autoincrement())
+  alias         String @unique
+  puntosTotales Int    @default(0)
 
-    createdAt   DateTime   @default(now())   
+  intentos          IntentoMision[]
+  caminosTerminados CaminoCompletado[]
+
+  createdAt DateTime @default(now())
+}
+
+model IntentoMision {
+  id            Int      @id @default(autoincrement())
+  visitanteId   Int
+  misionId      Int
+  respuesta     String
+  puntaje       Int
+  correcto      Boolean
+  feedback      String?
+  evaluadoPorIA Boolean  @default(false)
+  intentoNumero Int
+  createdAt     DateTime @default(now())
+
+  visitante Visitante @relation(fields: [visitanteId], references: [id], onDelete: Cascade)
+  mision    Mision    @relation(fields: [misionId], references: [id], onDelete: Cascade)
+
+  @@index([visitanteId, misionId])
+}
+
+model CaminoCompletado {
+  id            Int      @id @default(autoincrement())
+  visitanteId   Int
+  caminoId      Int
+  puntosGanados Int
+  completadoEn  DateTime @default(now())
+
+  visitante Visitante @relation(fields: [visitanteId], references: [id], onDelete: Cascade)
+  camino    Camino    @relation(fields: [caminoId], references: [id], onDelete: Cascade)
+
+  @@unique([visitanteId, caminoId])
 }

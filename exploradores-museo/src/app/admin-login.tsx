@@ -46,7 +46,7 @@ export default function IngresoAdminScreen() {
                     visibilityTime: 3000, 
                     topOffset: 50, 
                 });
-                router.replace("/(admin)/caminos");
+                router.replace("/admin/caminos");
             } else {
                 const errorData = await respuesta.json();
                 console.log("El backend respondió:", respuesta.status, errorData);

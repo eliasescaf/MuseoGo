@@ -33,7 +33,7 @@ export default function IndexScreen() {
         <View className="gap-4 mb-8 w-full">
           
           <Pressable 
-            onPress={() => router.push("/(visitante)/ingreso")} 
+            onPress={() => router.push("/visitante-login")} 
             className="flex-row min-h-[76px] items-center gap-4 rounded-3xl bg-white px-5 py-4 shadow-sm border border-slate-200 active:opacity-80"
             style={{ transform: [{ scale: 1 }] }} 
           >

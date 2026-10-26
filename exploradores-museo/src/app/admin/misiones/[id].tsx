@@ -14,7 +14,7 @@ LogBox.ignoreLogs([
 const TIPOS_MISION = [
     { id: "QR_OBJETO", titulo: "Encontrar Objeto", icono: "qrcode-scan", color: "bg-blue-500" },
     { id: "TRIVIA", titulo: "Trivia múltiple", icono: "format-list-checks", color: "bg-violet-500" },
-    { id: "ACERTIJO", titulo: "Adivinanza", icono: "head-lightbulb-outline", color: "bg-amber-500" }
+    { id: "EXPLICACION", titulo: "Respuesta abierta", icono: "text-box-edit-outline", color: "bg-amber-500" }
 ];
 
 export default function DetalleMisionScreen(){
@@ -34,7 +34,7 @@ export default function DetalleMisionScreen(){
     const [opcionA, setOpcionA] = useState("");
     const [opcionB, setOpcionB] = useState("");
     const [opcionC, setOpcionC] = useState("");
-    const [respuestaAcertijo, setRespuestaAcertijo] = useState("");
+    const [respuestaEsperada, setRespuestaEsperada] = useState("");
     const [objetoId, setObjetoId] = useState<number | null>(null);
 
     const [objetos, setObjetos] = useState([]);
@@ -49,9 +49,10 @@ export default function DetalleMisionScreen(){
                 if (respuesta.ok) {
                     const mision = await respuesta.json();
                     
+                    const tipoMision = mision.tipo === "ACERTIJO" ? "EXPLICACION" : mision.tipo;
                     setTitulo(mision.titulo || "");
                     setDescripcion(mision.descripcion || "");
-                    setTipoSeleccionado(mision.tipo || null);
+                    setTipoSeleccionado(tipoMision || null);
                     setActivo(mision.activo);
                     setPuntos(mision.puntos ? mision.puntos.toString() : "10");
                     setObjetoId(mision.objetoId || null);
@@ -62,13 +63,13 @@ export default function DetalleMisionScreen(){
                         setOpcionA(arrayOpciones[0] || "");
                         setOpcionB(arrayOpciones[1] || "");
                         setOpcionC(arrayOpciones[2] || "");
-                    } else if (mision.tipo === "ACERTIJO") {
-                        setRespuestaAcertijo(mision.respuestaCorrecta || "");
+                    } else if (mision.tipo === "EXPLICACION" || mision.tipo === "ACERTIJO") {
+                        setRespuestaEsperada(mision.respuestaCorrecta || "");
                     }
                     
                 } else {
                     Alert.alert("Error", "No se pudo cargar la misión");
-                    router.replace("/(admin)/misiones");
+                    router.replace("/admin/misiones");
                 }
             } catch (error) {
                 console.error(error);
@@ -89,6 +90,10 @@ export default function DetalleMisionScreen(){
             Alert.alert("Error", "Debes seleccionar un objeto del museo para este tipo de misión");
             return;
         }
+        if (tipoSeleccionado === "EXPLICACION" && !respuestaEsperada.trim()) {
+            Alert.alert("Error", "La respuesta esperada no puede estar vacía");
+            return;
+        }
 
         setProcesando(true);
 
@@ -104,8 +109,8 @@ export default function DetalleMisionScreen(){
         if (tipoSeleccionado === "TRIVIA") {
             payload.opciones = [opcionA, opcionB, opcionC];
             payload.respuestaCorrecta = opcionA;
-        } else if (tipoSeleccionado === "ACERTIJO") {
-            payload.respuestaCorrecta = respuestaAcertijo;
+        } else if (tipoSeleccionado === "EXPLICACION") {
+            payload.respuestaCorrecta = respuestaEsperada.trim();
         }
 
         try {
@@ -144,7 +149,7 @@ export default function DetalleMisionScreen(){
 
                         if (respuesta.ok) {
                             Alert.alert("Éxito", "La misión fue eliminada");
-                            router.replace("/(admin)/misiones");
+                            router.replace("/admin/misiones");
                         } else {
                             Alert.alert("Error", "Hubo un problema al eliminar la misión");
                         }
@@ -231,8 +236,18 @@ export default function DetalleMisionScreen(){
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Título de la misión</Text>
                     <TextInput value={titulo} onChangeText={setTitulo} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 mb-4" />
                     
-                    <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Descripción</Text>
-                    <TextInput value={descripcion} onChangeText={setDescripcion} multiline numberOfLines={3} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 mb-4" style={{ minHeight: 80, textAlignVertical: 'top' }} />
+                    <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
+                        {tipoSeleccionado === "EXPLICACION" ? "Consigna para el visitante" : "Descripción"}
+                    </Text>
+                    <TextInput
+                        value={descripcion}
+                        onChangeText={setDescripcion}
+                        placeholder={tipoSeleccionado === "EXPLICACION" ? "Ej: Explicá con tus palabras por qué esta pieza es importante." : "Explicá de qué trata la misión..."}
+                        multiline
+                        numberOfLines={3}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 mb-4"
+                        style={{ minHeight: 80, textAlignVertical: 'top' }}
+                    />
 
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Puntos de recompensa</Text>
                     <TextInput value={puntos} onChangeText={setPuntos} keyboardType="numeric" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800" />
@@ -241,16 +256,18 @@ export default function DetalleMisionScreen(){
                 <View className="pt-6 border-t border-slate-200">
                     <Text className="text-base font-bold text-slate-800 mb-4">Detalles del Reto</Text>
 
-                    {tipoSeleccionado === "QR_OBJETO" && (
+                    {(tipoSeleccionado === "QR_OBJETO" || tipoSeleccionado === "EXPLICACION") && (
                         <Pressable 
                             onPress={abrirModalObjetos}
                             className="bg-blue-50 p-4 rounded-2xl border border-blue-200 items-center justify-center py-6 border-dashed active:bg-blue-100"
                         >
-                            <MaterialCommunityIcons name="cube-scan" size={32} color="#3b82f6" />
+                            <MaterialCommunityIcons name={tipoSeleccionado === "EXPLICACION" ? "cube-outline" : "cube-scan"} size={32} color="#3b82f6" />
                             <Text className="text-blue-700 font-bold mt-2 text-center">
                                 {objetoId 
                                     ? `Objeto vinculado: ${nombreObjeto ? `${nombreObjeto}` : ''}` 
-                                    : "Tocar para cambiar el Objeto del museo"}
+                                    : tipoSeleccionado === "EXPLICACION"
+                                        ? "Tocar para vincular la pieza (opcional)"
+                                        : "Tocar para cambiar el Objeto del museo"}
                             </Text>
                         </Pressable>
                     )}
@@ -263,9 +280,21 @@ export default function DetalleMisionScreen(){
                         </View>
                     )}
 
-                    {tipoSeleccionado === "ACERTIJO" && (
+                    {tipoSeleccionado === "EXPLICACION" && (
                         <View>
-                            <TextInput value={respuestaAcertijo} onChangeText={setRespuestaAcertijo} placeholder="Palabra clave o respuesta secreta" className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base" />
+                            <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Respuesta esperada (referencia para la IA)</Text>
+                            <TextInput
+                                value={respuestaEsperada}
+                                onChangeText={setRespuestaEsperada}
+                                placeholder="Ej: La pieza es importante porque muestra cómo se usaba en la vida cotidiana y qué técnicas desarrollaron."
+                                multiline
+                                numberOfLines={4}
+                                className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base text-slate-800"
+                                style={{ minHeight: 110, textAlignVertical: 'top' }}
+                            />
+                            <Text className="text-xs text-slate-500 mt-2 ml-1">
+                                La IA compara la respuesta del visitante contra esta referencia. Escribí una respuesta modelo completa.
+                            </Text>
                         </View>
                     )}
                 </View>

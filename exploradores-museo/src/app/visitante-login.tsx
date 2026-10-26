@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import { API_URL } from '../../config/api';
-import { useVisitanteStore } from '../../store/useVisitanteStore';
+import { API_URL } from '../config/api';
+import { useVisitanteStore } from '../store/useVisitanteStore';
 
 
 export default function IngresoVisitanteScreen() {
@@ -36,12 +36,12 @@ export default function IngresoVisitanteScreen() {
                 login(data.id, data.alias);
                 Toast.show({
                     type: 'info',
-                    text1: '¡Bienvenido al Museo!',
+                    text1: `¡Bienvenido al Museo, ${data.alias}!`,
                     text2: 'Preparate para tu recorrido',
                     position: 'top',
                     visibilityTime: 3000,
                 });
-                router.replace("(visitante)/caminos");
+                router.replace("/(visitante)/caminos");
             }else{
                 Alert.alert("Error", "No se pudo registrar el alias. Intente nuevamente");
             }

@@ -42,7 +42,7 @@ export default function CaminosScreen() {
       <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         
         <Pressable 
-          onPress={() => router.push("/(admin)/crear-camino")} 
+          onPress={() => router.push("/admin/crear-camino")} 
           className="flex-row items-center gap-4 rounded-3xl bg-blue-500 px-5 py-4 shadow-sm active:bg-blue-600 mb-8"
         >
           <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
@@ -70,7 +70,7 @@ export default function CaminosScreen() {
           ) : (
             caminos.map((camino: any) => (
             <Pressable
-              onPress={() => router.push(`/(admin)/caminos/${camino.id}`)} 
+              onPress={() => router.push(`/admin/caminos/${camino.id}`)} 
               key={camino.id}
               className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 active:bg-slate-50"
             >

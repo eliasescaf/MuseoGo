@@ -43,7 +43,7 @@ export default function ObjetosScreen() {
       <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         
         <Pressable 
-          onPress={() => router.push("/(admin)/crear-objeto")} 
+          onPress={() => router.push("/admin/crear-objeto")} 
           className="flex-row items-center gap-4 rounded-3xl bg-blue-500 px-5 py-4 shadow-sm active:bg-blue-600 mb-8"
         >
           <View className="h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
@@ -71,7 +71,7 @@ export default function ObjetosScreen() {
                     ) : (
           objetos.map((objeto: any) => (
             <Pressable
-              onPress={() => router.push(`/(admin)/objetos/${objeto.id}`)} 
+              onPress={() => router.push(`/admin/objetos/${objeto.id}`)} 
               key={objeto.id}
               className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 active:bg-slate-50"
             >

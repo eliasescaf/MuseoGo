@@ -28,32 +28,66 @@ export default function CrearObjetoScreen() {
   const [imagenUrl, setImagenUrl] = useState("");
 
   const [guardando, setGuardando] = useState(false);
+  const [assetFoto, setAssetFoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
   useFocusEffect(useCallback(() => {
     setNombre("");
     setDescripcion("");
     setDatosHistoricos("");
     setImagenUrl("");
+    setAssetFoto(null);
     setGuardando(false);
     }, [])
   );
 
-  const tomarFoto= async () => {
+  const elegirFuente = async () => {
+    Alert.alert("Foto del objeto", "¿Cómo querés agregar la imagen?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Tomar foto", onPress: tomarFoto },
+      { text: "Elegir de la galería", onPress: elegirGaleria },
+    ]);
+  };
+
+  const tomarFoto = async () => {
     const permiso  = await ImagePicker.requestCameraPermissionsAsync();
     if(!permiso.granted){
       Alert.alert("Permiso denegado", "No se puede acceder a la cámara");
       return;
     }
 
-    const resultado = await ImagePicker.launchCameraAsync({
+    await seleccionar(() => ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5
-    })
+      aspect: [1, 1],
+      quality: 0.5,
+      exif: false,
+    }));
+  }
+
+  const elegirGaleria = async () => {
+    // La mayoría de los Android no pide permiso para la galería; igual lo pedimos por seguridad
+    const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if(!permiso.granted){
+      Alert.alert("Permiso denegado", "No se puede acceder a la galería");
+      return;
+    }
+
+    await seleccionar(() => ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      exif: false,
+    }));
+  }
+
+  const seleccionar = async (invocar: () => Promise<ImagePicker.ImagePickerResult>) => {
+    const resultado = await invocar();
 
     if(!resultado.canceled){
-      setImagenUrl(resultado.assets[0].uri);
+      const asset = resultado.assets[0];
+      setImagenUrl(asset.uri);
+      setAssetFoto(asset);
     }
   }
 
@@ -70,7 +104,12 @@ export default function CrearObjetoScreen() {
       let urlFinalFoto = null;
 
       if(imagenUrl){
-        const nombreArchivo = `${Date.now()}_foto.jpg`;
+        // Respetamos el formato real de la foto (jpeg/png/webp); la galería puede devolver PNG
+        const mime = assetFoto?.mimeType && assetFoto.mimeType.startsWith('image/')
+          ? assetFoto.mimeType
+          : 'image/jpeg';
+        const extension = mime.split('/')[1].replace('jpeg', 'jpg');
+        const nombreArchivo = `${Date.now()}_foto.${extension}`;
 
         const base64 = await FileSystem.readAsStringAsync(imagenUrl, { 
           encoding: FileSystem.EncodingType.Base64 
@@ -80,7 +119,7 @@ export default function CrearObjetoScreen() {
       const {error: errorStorage} = await supabase.storage
         .from("fotos-objetos")
         .upload(nombreArchivo, decode(base64), {
-          contentType: "image/jpeg",
+          contentType: mime,
         });
 
       if (errorStorage){
@@ -115,7 +154,7 @@ export default function CrearObjetoScreen() {
 
       if(respuesta.ok){
         Alert.alert("Exito", "El objeto se creó correctamente");
-        router.replace("/(admin)/objetos");
+        router.replace("/admin/objetos");
       } else {
         Alert.alert("Error", "Hubo un problema al crear el objeto");
       }
@@ -132,7 +171,7 @@ export default function CrearObjetoScreen() {
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
         <Pressable 
-          onPress={() => router.replace("/(admin)/objetos")} 
+          onPress={() => router.replace("/admin/objetos")} 
           className="p-2 -ml-2 active:bg-slate-100 rounded-full"
         >
           <Ionicons name="arrow-back" size={24} color="#334155" />
@@ -146,7 +185,7 @@ export default function CrearObjetoScreen() {
         
         <View className="items-center mb-8">
           {imagenUrl ? (
-            <Pressable onPress={tomarFoto} className="active:opacity-80">
+            <Pressable onPress={elegirFuente} className="active:opacity-80">
               <Image
                 source={{uri: imagenUrl}}
                 className="h-32 w-32 rounded-3xl border-2 border-slate-300"
@@ -154,10 +193,16 @@ export default function CrearObjetoScreen() {
               <Text className="text-xs font-bold text-slate-500 mt-2 text-center">Tocar para cambiar</Text>
             </Pressable>
           ):(
-            <Pressable onPress={tomarFoto} className="h-32 w-32 bg-slate-100 rounded-3xl border-2 border-dashed border-slate-300 items-center justify-center active:bg-slate-200">
-              <MaterialCommunityIcons name="camera-plus" size={32} color="#94a3b8" />
-          <Text className="text-xs font-medium text-slate-500 mt-2">Tomar Foto</Text>
-            </Pressable>
+            <View className="flex-row gap-3">
+              <Pressable onPress={tomarFoto} className="h-32 px-5 bg-slate-100 rounded-3xl border-2 border-dashed border-slate-300 items-center justify-center active:bg-slate-200">
+                <MaterialCommunityIcons name="camera-plus" size={32} color="#94a3b8" />
+                <Text className="text-xs font-medium text-slate-500 mt-2">Tomar Foto</Text>
+              </Pressable>
+              <Pressable onPress={elegirGaleria} className="h-32 px-5 bg-slate-100 rounded-3xl border-2 border-dashed border-slate-300 items-center justify-center active:bg-slate-200">
+                <MaterialCommunityIcons name="image-plus" size={32} color="#94a3b8" />
+                <Text className="text-xs font-medium text-slate-500 mt-2">De la Galería</Text>
+              </Pressable>
+            </View>
           )}
         </View>
 

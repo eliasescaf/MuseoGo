@@ -46,7 +46,7 @@ export default function DetalleObjetosScreen(){
                     setActivo(objeto.activo ?? true);
                 } else {
                     Alert.alert("Error", "No se pudo cargar el objeto");
-                    router.replace("/(admin)/objetos");
+                    router.replace("/admin/objetos");
                 }
             }
             catch(error){
@@ -82,7 +82,7 @@ export default function DetalleObjetosScreen(){
 
         if(resultado.ok){
           Alert.alert('Exito', 'El objeto fue actualizado exitosamente');
-          router.replace("/(admin)/objetos");
+          router.replace("/admin/objetos");
         }else{
           Alert.alert('Error', 'Hubo un problema al actualizar el objeto');
         }
@@ -120,7 +120,7 @@ export default function DetalleObjetosScreen(){
 
                   if(respuesta.ok){
                     Alert.alert('Exito', 'El objeto se eliminó del museo');
-                    router.replace("/(admin)/objetos");
+                    router.replace("/admin/objetos");
                   } else{
                     Alert.alert('Error', 'Hubo un problema al borrar el objeto');
                     setProcesando(false);
@@ -182,7 +182,7 @@ export default function DetalleObjetosScreen(){
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
-        <Pressable onPress={() => router.replace("/(admin)/objetos")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
+        <Pressable onPress={() => router.replace("/admin/objetos")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
           <Ionicons name="arrow-back" size={24} color="#334155" />
         </Pressable>
         <Text className="text-lg font-bold text-slate-800 ml-2">Detalle del Objeto</Text>

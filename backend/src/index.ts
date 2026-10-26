@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import caminosRoutes from './routes/caminos.routes';
@@ -10,6 +11,10 @@ import adminsRoutes from './routes/admins.routes';
 
 const app = express()
 const PORT = process.env.PORT || 3000;
+
+if (!process.env.GROQ_API_KEY?.trim()) {
+    console.warn("GROQ_API_KEY no configurada. El evaluador usará el modo de respaldo.");
+}
 
 
 app.use(cors());

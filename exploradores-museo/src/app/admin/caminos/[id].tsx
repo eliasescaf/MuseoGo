@@ -55,7 +55,7 @@ export default function DetalleCaminoScreen(){
                     }
                 } else {
                     Alert.alert("Error", "No se pudo cargar el camino");
-                    router.replace("/(admin)/caminos");
+                    router.replace("/admin/caminos");
                 }
             } catch (error) {
                 console.error(error);
@@ -96,7 +96,7 @@ export default function DetalleCaminoScreen(){
 
             if (respuesta.ok) {
                 Alert.alert("Éxito", "El camino fue actualizado correctamente");
-                router.replace("/(admin)/caminos");
+                router.replace("/admin/caminos");
             } else {
                 Alert.alert("Error", "Hubo un error al actualizar el camino");
             }
@@ -118,7 +118,7 @@ export default function DetalleCaminoScreen(){
 
                     if (respuesta.ok) {
                         Alert.alert("Éxito", "El camino fue eliminado");
-                        router.replace("/(admin)/caminos")
+                        router.replace("/admin/caminos")
                     } else {
                         Alert.alert("Error", "Hubo un problema al eliminar el camino");
                         setProcesando(false);
@@ -177,7 +177,7 @@ export default function DetalleCaminoScreen(){
         <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
             
             <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
-                <Pressable onPress={() => router.replace("/(admin)/caminos")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
+                <Pressable onPress={() => router.replace("/admin/caminos")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
                     <Ionicons name="arrow-back" size={24} color="#334155" />
                 </Pressable>
                 <Text className="text-lg font-bold text-slate-800 ml-2">Detalle del camino</Text>
