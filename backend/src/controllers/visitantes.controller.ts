@@ -33,7 +33,7 @@ export const registrarVisitante = async (req: Request, res: Response) => {
 // Resumen de progreso: puntos totales del visitante + caminos completados
 export const obtenerProgreso = async (req: Request, res: Response) => {
     try {
-        const visitanteId = parseInt(req.params.visitanteId);
+        const visitanteId = parseInt(req.params.visitanteId as string);
         if (isNaN(visitanteId)) {
             return res.status(400).json({ error: "ID inválido" });
         }
@@ -74,8 +74,8 @@ export const obtenerProgreso = async (req: Request, res: Response) => {
 
 export const obtenerResultadosCamino = async (req: Request, res: Response) => {
     try {
-        const visitanteId = parseInt(req.params.visitanteId);
-        const caminoId = parseInt(req.params.caminoId);
+        const visitanteId = parseInt(req.params.visitanteId as string);
+        const caminoId = parseInt(req.params.caminoId as string);
 
         if (isNaN(visitanteId) || isNaN(caminoId)) {
             return res.status(400).json({ error: "IDs inválidos" });
