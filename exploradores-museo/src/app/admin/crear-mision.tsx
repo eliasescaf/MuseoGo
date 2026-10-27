@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { API_URL } from '../../config/api';
-import { View, Text, ScrollView, Pressable, TextInput, Alert, Modal, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Alert, Modal, ActivityIndicator, FlatList, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router'; 
+import { router, useFocusEffect, useRouter } from 'expo-router'; 
 import { Button } from '../../components/ui/button';
 
 const TIPOS_MISION = [
@@ -38,7 +38,19 @@ const TIPOS_MISION = [
 
 export default function CrearMisionScreen() {
     const insets = useSafeAreaInsets();
+    const routerNav = useRouter();
     const [tipoSeleccionado, setTipoSeleccionado] = useState<string | null>(null);
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                routerNav.replace("/admin/misiones");
+                return true;
+            }
+        );
+        return () => backHandler.remove();
+    }, [routerNav]);
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [puntos, setPuntos] = useState("10");
@@ -107,7 +119,7 @@ export default function CrearMisionScreen() {
 
         if(respuesta.ok){
           Alert.alert("Éxito", "La misión se creó correctamente");
-          router.back();
+          router.replace("/admin/misiones");
         } else {
           Alert.alert("Error", "Hubo un problema al guardar en el servidor");
         }
@@ -141,7 +153,7 @@ export default function CrearMisionScreen() {
         <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
             
             <View className="flex-row items-center px-4 py-4 border-b border-slate-100 bg-white">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
+                <Pressable onPress={() => router.replace("/admin/misiones")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
                     <Ionicons name="arrow-back" size={24} color="#334155" />
                 </Pressable>
                 <Text className="text-lg font-bold text-slate-800 ml-2">Nueva Misión</Text>

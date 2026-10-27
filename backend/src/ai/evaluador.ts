@@ -125,8 +125,6 @@ export async function evaluarRespuestaAbierta(
 
         return {
             puntaje,
-            // Regla del Sprint 3: cualquier puntaje > 0 cierra la misión con puntos
-            // proporcionales (Umbreak full = CORRECTO); puntaje 0 = INCORRECTO (no suma).
             correcto: puntaje > 0,
             feedback,
             evaluadoPorIA: true,

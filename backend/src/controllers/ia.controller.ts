@@ -124,7 +124,6 @@ export const evaluarRespuesta = async (req: Request, res: Response) => {
     }
 };
 
-// Valida el código leído del QR del objeto; cierra la misión (evaluación única)
 function evaluarQR(
     objeto: { codigoQr: string | null } | null,
     objetoId: number | null,
@@ -165,7 +164,6 @@ function evaluarTrivia(
                 respuesta = opciones[indice];
             }
         } catch {
-            // Si las opciones no son JSON válido, se compara el texto recibido.
         }
     }
 
@@ -173,12 +171,18 @@ function evaluarTrivia(
     const recibida = normalizarOpcion(respuesta);
     const correcto = esperada.length > 0 && esperada === recibida;
 
+    let feedback = "";
+    if (correcto) {
+        feedback = "¡Correcto! Avanzá con la próxima misión.";
+    } else {
+        // Feedback más informativo para respuestas incorrectas
+        feedback = `Esa opción no es correcta. La respuesta correcta es: "${mision.respuestaCorrecta}"`;
+    }
+
     return {
         puntaje: correcto ? 100 : 0,
         correcto,
-        feedback: correcto
-            ? "¡Correcto! Avanzá con la próxima misión."
-            : "No es la opción correcta. Intentá de nuevo.",
+        feedback,
         evaluadoPorIA: false,
     };
 }

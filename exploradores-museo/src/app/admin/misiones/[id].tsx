@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Switch, Modal, FlatList } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Switch, Modal, FlatList, BackHandler } from "react-native";
 import { useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import { API_URL } from "../../../config/api";
@@ -41,6 +41,17 @@ export default function DetalleMisionScreen(){
     const [modalVisible, setModalVisible] = useState(false);
     const [nombreObjeto, setNombreObjeto] = useState("");
     const [cargandoObjetos, setCargandoObjetos] = useState(false);
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                router.replace("/admin/misiones");
+                return true;
+            }
+        );
+        return () => backHandler.remove();
+    }, [router]);
 
     useEffect(() => {
         const cargarMision = async () => {
@@ -122,7 +133,7 @@ export default function DetalleMisionScreen(){
 
             if (respuesta.ok) {
                 Alert.alert("Éxito", "La misión fue actualizada correctamente");
-                router.back();
+                router.replace("/admin/misiones");
             } else {
                 Alert.alert("Error", "Hubo un error al actualizar la misión");
             }
@@ -196,7 +207,7 @@ export default function DetalleMisionScreen(){
             
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-slate-100 bg-white">
                 <View className="flex-row items-center">
-                    <Pressable onPress={() => router.back()} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
+                    <Pressable onPress={() => router.replace("/admin/misiones")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
                         <Ionicons name="arrow-back" size={24} color="#334155" />
                     </Pressable>
                     <Text className="text-lg font-bold text-slate-800 ml-2">Editar Misión</Text>

@@ -1,7 +1,7 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
-import { Pressable, ScrollView, Text, TextInput, View, Alert, Modal, ActivityIndicator, FlatList } from "react-native";
+import { useState, useCallback, useEffect } from "react";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, Modal, ActivityIndicator, FlatList, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -11,6 +11,17 @@ import { API_URL } from "../../config/api";
 export default function CrearCaminoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        router.replace("/admin/caminos");
+        return true;
+      }
+    );
+    return () => backHandler.remove();
+  }, [router]);
   
   const [nombre, setNombre] = useState("");
   const [duracion, setDuracion] = useState("");

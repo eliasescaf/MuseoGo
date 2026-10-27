@@ -1,10 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect} from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 import * as ImagePicker from "expo-image-picker";
-import { Pressable, ScrollView, Text, TextInput, View, Alert, Image} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, Image, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -21,6 +21,17 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 export default function CrearObjetoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        router.replace("/admin/objetos");
+        return true;
+      }
+    );
+    return () => backHandler.remove();
+  }, [router]);
 
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");

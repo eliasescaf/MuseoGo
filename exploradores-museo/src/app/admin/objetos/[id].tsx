@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect, useRef } from "react";
-import { Pressable, ScrollView, Text, TextInput, View, Alert, Image, ActivityIndicator, Switch } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, Image, ActivityIndicator, Switch, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { Button } from "../../../components/ui/button";
@@ -31,6 +31,17 @@ export default function DetalleObjetosScreen(){
     const [imagenUrl, setImagenUrl] = useState("");
     const [activo, setActivo] = useState(true);
     const qrRef = useRef<any>(null);
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                router.replace("/admin/objetos");
+                return true;
+            }
+        );
+        return () => backHandler.remove();
+    }, [router]);
 
     useEffect(() => {
         const cargarObjeto = async () => {

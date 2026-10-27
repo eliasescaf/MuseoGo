@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
-import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Modal, FlatList } from "react-native";
-import { useState, useCallback } from "react";
+import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Modal, FlatList, BackHandler } from "react-native";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { API_URL } from "../../../config/api";
@@ -29,6 +29,17 @@ export default function DetalleCaminoScreen(){
     const [modalVisible, setModalVisible] = useState(false);
     const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
     const [cargandoMisiones, setCargandoMisiones] = useState(false);
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                router.replace("/admin/caminos");
+                return true;
+            }
+        );
+        return () => backHandler.remove();
+    }, [router]);
 
     useFocusEffect(
         useCallback(() => {
