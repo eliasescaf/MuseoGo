@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/index.ts",
-    "start": "node --loader tsx src/index.ts",
+    "start": "node --import tsx/cjs src/index.ts",
     "probar-ia": "tsx scripts/probar-ia.ts"
   },
   "keywords": [],
