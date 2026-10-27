@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Hacer petición HTTP a Render
-        run: curl -m 90 https://museogo.onrender.com/api/
+        run: curl -sS -f -m 90 https://museogo.onrender.com/api/ping

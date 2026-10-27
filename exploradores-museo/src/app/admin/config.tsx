@@ -1,5 +1,7 @@
-import { Text, View, Pressable, LogBox } from "react-native";
+import { Text, View, Pressable, LogBox, Alert } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
+import { FontAwesome6 } from "@expo/vector-icons";
 
 LogBox.ignoreLogs([
   'findNodeHandle is deprecated in StrictMode',
@@ -8,6 +10,7 @@ LogBox.ignoreLogs([
 
 export default function Screen() {
   const [activo, setActivo] = useState(true);
+  const router = useRouter();
 
   return (
     <View className="flex-1 bg-slate-50 px-6 pt-16">
@@ -42,6 +45,27 @@ export default function Screen() {
           
         </View>
       </View>
+
+      <Pressable
+        onPress={() => {
+          Alert.alert(
+            "Salir del Admin",
+            "¿Estás seguro?",
+            [
+              { text: "Cancelar", onPress: () => {}, style: "cancel" },
+              {
+                text: "Salir",
+                onPress: () => router.replace("/"),
+                style: "destructive",
+              },
+            ]
+          );
+        }}
+        className="mt-8 flex-row items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 py-3"
+      >
+        <FontAwesome6 name="door-open" size={18} color="white" />
+        <Text className="text-center font-bold text-white">Salir del Admin</Text>
+      </Pressable>
 
     </View>
   );

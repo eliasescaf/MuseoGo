@@ -7,8 +7,8 @@ import Constants from "expo-constants";
  * - 'local': Conecta a IP local (para testing en tu PC/red)
  * - 'custom': Usa URL personalizada (incluye http/https)
  */
-const BACKEND_MODE = 'local' as const;
-const CUSTOM_BACKEND_URL = 'https://your-backend.render.com/api'; // Cambiar cuando uses deploy
+const BACKEND_MODE = 'custom' as const;
+const CUSTOM_BACKEND_URL = 'https://museogo.onrender.com/api'; // Cambiar cuando uses deploy
 
 const debuggerHost = Constants.expoConfig?.hostUri;
 

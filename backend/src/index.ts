@@ -24,6 +24,10 @@ app.get('/', (req, res) => {
     res.json({ message: 'API FUNCIONANDO!'})
 })
 
+app.get('/api/ping', (req, res) => {
+    res.json({ status: 'pong', timestamp: new Date().toISOString() })
+})
+
 app.use('/api/caminos', caminosRoutes);
 app.use('/api/objetos', objetosRoutes);
 app.use('/api/misiones', misionesRoutes);
