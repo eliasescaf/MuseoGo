@@ -1,0 +1,14 @@
+name: Mantener Render Despierto
+
+on:
+  schedule:
+    - cron: '*/14 10-23,0-3 * * *'
+  
+  workflow_dispatch: 
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hacer petición HTTP a Render
+        run: curl -m 90 https://museogo.onrender.com/api/
