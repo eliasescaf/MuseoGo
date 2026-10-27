@@ -1,7 +1,8 @@
 import {Router} from "express";
+import type { Router as ExpressRouter } from "express";
 import {getCaminos, createCamino, updateCamino, deleteCamino, getCaminoById} from "../controllers/caminos.controller";
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.get('/', getCaminos);
 router.post('/', createCamino);

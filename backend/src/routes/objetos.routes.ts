@@ -1,7 +1,8 @@
 import {Router} from "express";
+import type { Router as ExpressRouter } from "express";
 import { getObjetos, createObjeto, updateObjeto, deleteObjeto, getObjetoById } from "../controllers/objetos.controller";
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.get('/', getObjetos);
 router.post('/', createObjeto);
