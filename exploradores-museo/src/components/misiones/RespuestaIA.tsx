@@ -51,7 +51,7 @@ export default function RespuestaIA({ mision, onEvaluar }: { mision: any, onEval
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    visitanteId: visitanteId, // Ahora TypeScript ya reconoce esta variable
+                    visitanteId: visitanteId, 
                     misionId: mision.id,
                     respuesta: textoUsuario
                 })
@@ -60,7 +60,6 @@ export default function RespuestaIA({ mision, onEvaluar }: { mision: any, onEval
             const data = await response.json();
 
             if (response.ok) {
-                // La evaluación es única: se cierra el intento acá, sin pedir que siga respondiendo.
                 const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100);
 
                 setMensajes(prev => [...prev, {
@@ -73,7 +72,6 @@ export default function RespuestaIA({ mision, onEvaluar }: { mision: any, onEval
 
                 setTimeout(() => {
                     onEvaluar({
-                        // 100 = CORRECTO (puntos completos), >0 = PARCIAL (proporcionales), 0 = INCORRECTO (no suma)
                         estado: data.puntaje >= 100 ? 'CORRECTO' : data.puntaje > 0 ? 'PARCIAL' : 'INCORRECTO',
                         puntos,
                         feedback: data.feedback,

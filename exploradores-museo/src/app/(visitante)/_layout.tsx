@@ -41,13 +41,12 @@ export default function VisitanteLayout() {
                 }}
             />
 
-            {/* Rutas ocultas de la barra de navegación */}
             <Tabs.Screen
                 name="caminos/[id]"
                 options={{
                     tabBarButton: () => null,
-                    tabBarItemStyle: { display: 'none' }, // Quita el slot del tab bar
-                    tabBarStyle: { display: 'none' } // Oculta la barra en el detalle
+                    tabBarItemStyle: { display: 'none' }, 
+                    tabBarStyle: { display: 'none' } 
                 }}
             />
             
@@ -56,7 +55,7 @@ export default function VisitanteLayout() {
                 options={{
                     tabBarButton: () => null,
                     tabBarItemStyle: { display: 'none' },
-                    tabBarStyle: { display: 'none' } // Oculta la barra durante la misión
+                    tabBarStyle: { display: 'none' } 
                 }}
             />
             

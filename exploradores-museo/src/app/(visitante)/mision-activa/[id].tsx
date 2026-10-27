@@ -164,46 +164,72 @@ export default function MisionActivaScreen() {
                         )}
                     </View>
                 ) : (
-                    <View className="flex-1 items-center justify-center px-6">
-                        <View className={`w-24 h-24 rounded-full items-center justify-center mb-6 ${
-                            estadoResolucion === 'CORRECTO' ? 'bg-emerald-100' : esParcial ? 'bg-amber-100' : 'bg-red-100'
-                        }`}>
-                            <Ionicons
-                                name={estadoResolucion === 'CORRECTO' ? 'checkmark-circle' : esParcial ? 'alert-circle' : 'close-circle'}
-                                size={64}
-                                color={estadoResolucion === 'CORRECTO' ? '#10b981' : esParcial ? '#d97706' : '#ef4444'}
-                            />
-                        </View>
-                        <Text className="text-3xl font-black text-slate-800 mb-2 text-center">
-                            {estadoResolucion === 'CORRECTO' ? '¡Misión Cumplida!' : esParcial ? 'Misión completada' : 'Misión Fallida'}
-                        </Text>
-                        <Text className="text-base text-slate-500 text-center mb-2">
-                            {esExitoso
-                                ? `Ganaste ${puntosGanados} de ${mision.puntos} puntos.`
-                                : `Obtuviste ${puntosGanados} de ${mision.puntos} puntos.`}
-                        </Text>
-                        <Text className="text-sm text-slate-500 text-center italic mb-8">
-                            {esTriviaFallida
-                                ? 'Respuesta incorrecta: esta misión no suma puntos.'
-                                : feedbackIA ?? (esExitoso ? '¡Misión superada! Bien ahí.' : getMensajeError())}
-                        </Text>
-                        <Pressable
-                            onPress={
-                                comunicarContinuar
-                                    ? irASiguienteMision
-                                    : () => {
-                                        setFeedbackIA(null);
-                                        setPuntosGanados(0);
-                                        setEstadoResolucion('PENDIENTE');
-                                    }
-                            }
-                            className={`w-full h-14 rounded-2xl items-center justify-center flex-row ${comunicarContinuar ? 'bg-blue-600' : 'bg-slate-800'}`}
-                        >
-                            <Text className="text-white font-bold text-lg mr-2">
-                                {comunicarContinuar ? 'Continuar Camino' : 'Reintentar'}
+                    <View className="flex-1 justify-center">
+                        <View className="items-center px-6">
+                            <View className={`w-24 h-24 rounded-full items-center justify-center mb-6 ${
+                                estadoResolucion === 'CORRECTO' ? 'bg-emerald-100' : esParcial ? 'bg-amber-100' : 'bg-red-100'
+                            }`}>
+                                <Ionicons
+                                    name={estadoResolucion === 'CORRECTO' ? 'checkmark-circle' : esParcial ? 'alert-circle' : 'close-circle'}
+                                    size={64}
+                                    color={estadoResolucion === 'CORRECTO' ? '#10b981' : esParcial ? '#d97706' : '#ef4444'}
+                                />
+                            </View>
+                            <Text className="text-3xl font-black text-slate-800 mb-2 text-center">
+                                {estadoResolucion === 'CORRECTO' ? '¡Misión Cumplida!' : esParcial ? 'Misión completada' : 'Misión Fallida'}
                             </Text>
-                            <Ionicons name={comunicarContinuar ? "arrow-forward" : "refresh"} size={20} color="white" />
-                        </Pressable>
+                            <Text className="text-base text-slate-500 text-center mb-8">
+                                {esExitoso
+                                    ? `Ganaste ${puntosGanados} de ${mision.puntos} puntos.`
+                                    : `Obtuviste ${puntosGanados} de ${mision.puntos} puntos.`}
+                            </Text>
+
+                            {/* Feedback QR correcto: mostrar datos históricos */}
+                            {mision.tipo === 'QR_OBJETO' && estadoResolucion === 'CORRECTO' && mision.objeto?.datosHistoricos && (
+                                <View className="w-full bg-blue-50 p-4 rounded-2xl border border-blue-200 mb-8">
+                                    <Text className="text-sm text-blue-700 leading-relaxed italic">{mision.objeto.datosHistoricos}</Text>
+                                </View>
+                            )}
+
+                            {/* Feedback QR incorrecto: mostrar mensaje de error */}
+                            {mision.tipo === 'QR_OBJETO' && estadoResolucion === 'INCORRECTO' && (
+                                <View className="w-full mb-8">
+                                    <Text className="text-sm text-slate-500 text-center leading-relaxed italic">{getMensajeError()}</Text>
+                                </View>
+                            )}
+
+                            {/* Feedback para Trivia incorrecto: mostrar el feedback del backend */}
+                            {mision.tipo === 'TRIVIA' && esTriviaFallida && feedbackIA && (
+                                <View className="w-full mb-8">
+                                    <Text className="text-sm text-slate-500 text-center leading-relaxed italic">{feedbackIA}</Text>
+                                </View>
+                            )}
+
+                            {/* Feedback para EXPLICACION parcial */}
+                            {mision.tipo === 'EXPLICACION' && esParcial && feedbackIA && (
+                                <View className="w-full mb-8">
+                                    <Text className="text-sm text-slate-500 text-center leading-relaxed italic">{feedbackIA}</Text>
+                                </View>
+                            )}
+
+                            <Pressable
+                                onPress={
+                                    comunicarContinuar
+                                        ? irASiguienteMision
+                                        : () => {
+                                            setFeedbackIA(null);
+                                            setPuntosGanados(0);
+                                            setEstadoResolucion('PENDIENTE');
+                                        }
+                                }
+                                className={`w-full h-14 rounded-2xl items-center justify-center flex-row mt-6 ${comunicarContinuar ? 'bg-blue-600' : 'bg-slate-800'}`}
+                            >
+                                <Text className="text-white font-bold text-lg mr-2">
+                                    {comunicarContinuar ? 'Continuar Camino' : 'Reintentar'}
+                                </Text>
+                                <Ionicons name={comunicarContinuar ? "arrow-forward" : "refresh"} size={20} color="white" />
+                            </Pressable>
+                        </View>
                     </View>
                 )}
             </View>

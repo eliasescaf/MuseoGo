@@ -32,7 +32,6 @@ export default function ProgresoScreen() {
     const [progreso, setProgreso] = useState<ProgresoData | null>(null);
     const [cargando, setCargando] = useState(true);
 
-    // useFocusEffect igual a caminos: recarga al volver a la pestaña
     useFocusEffect(
         useCallback(() => {
             const fetchProgreso = async () => {
@@ -69,7 +68,6 @@ export default function ProgresoScreen() {
     return (
         <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
 
-            {/* Header idéntico a la pantalla de caminos */}
             <View className="px-6 mb-6">
                 <Text className="text-base font-semibold text-blue-600 uppercase tracking-wider">
                     Mi Progreso
@@ -86,7 +84,6 @@ export default function ProgresoScreen() {
 
             <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
                 <View className="gap-4 pb-10">
-                    {/* Tarjeta de puntos totales */}
                     <View className="bg-blue-600 rounded-3xl p-5 shadow-sm flex-row items-start justify-between">
                         <View className="flex-1 pr-4">
                             <Text className="text-xl font-bold text-white mb-1">
@@ -132,7 +129,6 @@ export default function ProgresoScreen() {
                                     </View>
                                 </View>
 
-                                {/* Badges de puntos ganados y fecha */}
                                 <View className="flex-row items-center gap-3">
                                     <View className="px-3 py-1.5 rounded-xl bg-amber-100">
                                         <Text className="text-xs font-bold text-amber-700">

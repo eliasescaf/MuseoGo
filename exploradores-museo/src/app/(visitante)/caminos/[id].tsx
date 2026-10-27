@@ -55,10 +55,9 @@ export default function DetalleCaminoScreen() {
         <View className="flex-1 bg-slate-50">
             <ScrollView 
                 className="flex-1" 
-                contentContainerStyle={{ paddingBottom: 120 + insets.bottom }} // Espacio para el botón fijo
+                contentContainerStyle={{ paddingBottom: 120 + insets.bottom }} 
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header (Botón Volver y Título) */}
                 <View className="px-6 pt-6 pb-4 bg-white border-b border-slate-200" style={{ paddingTop: insets.top + 10 }}>
                     <Pressable 
                         onPress={() => router.back()} 
@@ -91,14 +90,12 @@ export default function DetalleCaminoScreen() {
                     </View>
                 </View>
 
-                {/* Descripción */}
                 <View className="px-6 py-6">
                     <Text className="text-base text-slate-600 leading-relaxed">
                         {camino.descripcion}
                     </Text>
                 </View>
 
-                {/* Timeline de Misiones */}
                 <View className="px-6 mt-2">
                     <Text className="text-lg font-bold text-slate-800 mb-6">
                         Misiones del Camino
@@ -106,24 +103,20 @@ export default function DetalleCaminoScreen() {
 
                     {camino.misiones?.length > 0 ? (
                         camino.misiones.map((item: any, index: number) => {
-                            // Extraemos los datos reales de la misión que vienen anidados
                             const misionData = item.mision; 
                             
                             return (
                                 <View key={item.misionId} className="flex-row items-start mb-6 relative">
-                                    {/* Línea conectora (se oculta en el último elemento) */}
                                     {index !== camino.misiones.length - 1 && (
                                         <View className="absolute left-[15px] top-8 w-0.5 h-full bg-blue-200 -z-10" />
                                     )}
                                     
-                                    {/* Número/Nodo usando el orden de la tabla intermedia */}
                                     <View className="w-8 h-8 rounded-full bg-blue-100 border-2 border-blue-500 items-center justify-center mr-4 mt-1 bg-white">
                                         <Text className="text-blue-600 font-black text-xs">
                                             {item.orden}
                                         </Text>
                                     </View>
 
-                                    {/* Tarjeta de la Misión */}
                                     <View className="flex-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                                         <Text className="font-bold text-slate-800 text-base mb-1">
                                             {misionData.titulo}
@@ -153,7 +146,6 @@ export default function DetalleCaminoScreen() {
                 </View>
             </ScrollView>
 
-            {/* Botón Flotante Fijo */}
             <View className="absolute bottom-0 w-full bg-white border-t border-slate-200">
                 <View className="px-6 pt-4" style={{ paddingBottom: insets.bottom + 16 }}>
                     <Pressable

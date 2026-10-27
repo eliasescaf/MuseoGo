@@ -23,7 +23,6 @@ export default function ResultadosCaminoScreen() {
     useEffect(() => {
         const fetchResultados = async () => {
             try {
-                // Endpoint sugerido para obtener el resumen del camino para este visitante
                 const response = await fetch(`${API_URL}/visitantes/${visitanteId}/caminos/${caminoId}/resultados`);
                 
                 if (response.ok) {
@@ -61,7 +60,6 @@ export default function ResultadosCaminoScreen() {
     return (
         <View className="flex-1 bg-slate-50 px-6" style={{ paddingTop: insets.top + 40, paddingBottom: insets.bottom + 20 }}>
             
-            {/* Encabezado Festivo */}
             <View className="items-center mb-10">
                 <View className="w-28 h-28 bg-amber-100 rounded-full items-center justify-center mb-6 border-4 border-amber-200 shadow-sm">
                     <FontAwesome5 name="trophy" size={50} color="#d97706" />
@@ -74,7 +72,6 @@ export default function ResultadosCaminoScreen() {
                 </Text>
             </View>
 
-            {/* Tarjeta de Resumen */}
             <View className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm mb-auto">
                 <Text className="text-center text-slate-500 font-medium mb-6">
                     Resumen de tu expedición en el museo
@@ -109,7 +106,6 @@ export default function ResultadosCaminoScreen() {
                 </View>
             </View>
 
-            {/* Controles */}
             <Pressable
                 onPress={() => router.replace('/(visitante)/caminos')}
                 className="w-full h-14 bg-blue-600 rounded-2xl items-center justify-center flex-row shadow-sm active:bg-blue-700 mb-4"

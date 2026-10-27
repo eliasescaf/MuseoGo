@@ -13,7 +13,7 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
     const insets = useSafeAreaInsets();
     const [escaneado, setEscaneado] = useState(false);
     const [evaluando, setEvaluando] = useState(false);
-    const [zoom, setZoom] = useState(0); // Rango de 0 a 1
+    const [zoom, setZoom] = useState(0); 
 
     if (!permiso) {
         return <View className="flex-1 bg-slate-50 items-center justify-center"><ActivityIndicator size="large" color="#3b82f6" /></View>;
@@ -46,7 +46,6 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
         setEscaneado(true);
         setEvaluando(true);
 
-        // Validamos en el backend (registra el IntentoMision y cierra la misión)
         try {
             const response = await fetch(`${API_URL}/ia/evaluar`, {
                 method: 'POST',
@@ -54,7 +53,6 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
                 body: JSON.stringify({
                     visitanteId,
                     misionId: mision.id,
-                    // Enviamos la lectura cruda; el backend la compara contra el codigoQr del objeto
                     respuesta: data?.trim() || '',
                 }),
             });
@@ -71,7 +69,6 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
             const correcto = (resultado.puntaje ?? 0) >= 100;
             const puntos = Math.round(((mision.puntos ?? 0) * (resultado.puntaje ?? 0)) / 100);
 
-            // Paleta rápida para la UX antes de la transición
             setTimeout(() => {
                 onEvaluar({
                     estado: correcto ? 'CORRECTO' : 'INCORRECTO',
@@ -100,12 +97,9 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
                 }}
                 onBarcodeScanned={escaneado ? undefined : manejarEscaneo}
             >
-                {/* Capa oscura con "agujero" transparente en el medio */}
                 <View className="flex-1 bg-black/40 justify-center items-center">
                     
-                    {/* Cuadro de mira del QR */}
                     <View className="w-64 h-64 border-2 border-white/50 rounded-2xl justify-center items-center bg-transparent">
-                        {/* Esquinas decorativas */}
                         <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-xl" />
                         <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-xl" />
                         <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-xl" />
@@ -119,12 +113,10 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
                         )}
                     </View>
 
-                    {/* Texto indicativo */}
                     <Text className="text-white font-bold mt-8 text-center px-8 text-base drop-shadow-md">
                         Enfocá el código QR del objeto {"\n"} para completar la misión
                     </Text>
 
-                    {/* Controles de Zoom */}
                     <View className="absolute bottom-8 flex-row items-center bg-black/60 rounded-full px-4 py-2 gap-6">
                         <Pressable 
                             onPress={alejar} 

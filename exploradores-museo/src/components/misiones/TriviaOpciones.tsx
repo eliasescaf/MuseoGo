@@ -16,15 +16,12 @@ export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onE
 
     useEffect(() => {
         if (mision.opciones) {
-            // Aseguramos que sea un array (dependiendo de cómo lo devuelva tu ORM)
             const parsedOptions = typeof mision.opciones === 'string' 
                 ? JSON.parse(mision.opciones) 
                 : mision.opciones;
             
-            // Filtramos opciones vacías por seguridad
             const validOptions = parsedOptions.filter((o: string) => o && o.trim() !== '');
 
-            // Algoritmo de Fisher-Yates rápido para mezclar las opciones aleatoriamente
             const mezcladas = [...validOptions].sort(() => Math.random() - 0.5);
             setOpciones(mezcladas);
         }
@@ -41,7 +38,6 @@ export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onE
                 body: JSON.stringify({
                     visitanteId,
                     misionId: mision.id,
-                    // Enviamos el texto exacto; tu controlador normaliza y compara el texto (mision.respuestaCorrecta)
                     respuesta: seleccionada 
                 })
             });
@@ -51,7 +47,6 @@ export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onE
             if (response.ok) {
                 const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100);
 
-                // Pequeña pausa para que se vea el botón de carga antes de la transición
                 setTimeout(() => {
                     onEvaluar({
                         estado: data.puntaje >= 100 ? 'CORRECTO' : 'INCORRECTO',
