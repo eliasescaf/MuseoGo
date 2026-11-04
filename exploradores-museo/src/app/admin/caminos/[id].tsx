@@ -103,6 +103,12 @@ export default function DetalleCaminoScreen(){
         return () => {};
     }, [id])
     );
+
+    // Si la pantalla se reutiliza con otro id (ej: router.replace a la copia
+    // recién creada), el estado no se re-inicializa: al menos restauramos esto
+    useEffect(() => {
+        setProcesando(false);
+    }, [id]);
     
     const editarCamino = async () => {
         try {
@@ -158,6 +164,9 @@ export default function DetalleCaminoScreen(){
                             if (respuesta.ok) {
                                 const copia = await respuesta.json();
                                 Alert.alert("Exito", `Se creó "${copia.nombre}". Está inactiva: ajustála y activála cuando quieras.`);
+                                // Reseteamos antes de navegar: si el componente se reutiliza
+                                // con el id de la copia, el estado no se re-inicializa solo
+                                setProcesando(false);
                                 // Abrimos directamente la copia para seguir editando
                                 router.replace(`/admin/caminos/${copia.id}`);
                             } else {
@@ -167,6 +176,8 @@ export default function DetalleCaminoScreen(){
                         } catch (error) {
                             console.error(error);
                             Alert.alert("Error", "No se pudo conectar al servidor");
+                        } finally {
+                            // Red de seguridad: el botón de guardar nunca queda deshabilitado
                             setProcesando(false);
                         }
                     }

@@ -1,9 +1,32 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, Pressable, Text, LogBox } from "react-native";
+import { useRouter } from "expo-router";
+
+LogBox.ignoreLogs([
+  'findNodeHandle is deprecated in StrictMode',
+  'Warning: findNodeHandle is deprecated'
+]);
 
 export default function AdminLayout() {
     const insets = useSafeAreaInsets();
+    const router = useRouter();
+
+    const confirmarSalida = () => {
+        Alert.alert(
+            "Salir del Admin",
+            "¿Estás seguro?",
+            [
+                { text: "Cancelar", onPress: () => {}, style: "cancel" },
+                {
+                    text: "Salir",
+                    onPress: () => router.replace("/"),
+                    style: "destructive",
+                },
+            ]
+        );
+    };
 
   return (
     <Tabs
@@ -69,13 +92,21 @@ export default function AdminLayout() {
         }}
       />
 
-      {/* Pestaña 5: Config (Curador IA) */}
+      {/* Pestaña 5: Salir — el botón muestra el diálogo directamente, sin navegar a ninguna pantalla */}
       <Tabs.Screen
         name="config"
         options={{
-          title: "Curador/Config",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="robot" size={24} color={color as string} />
+          title: "Salir",
+          tabBarButton: () => (
+            <Pressable
+              onPress={confirmarSalida}
+              className="flex-1 items-center justify-center active:opacity-60"
+            >
+              <FontAwesome6 name="door-open" size={22} color="#ef4444" />
+              <Text style={{ fontSize: 12, fontWeight: "600", color: "#ef4444", marginTop: 2 }}>
+                Salir
+              </Text>
+            </Pressable>
           ),
         }}
       />

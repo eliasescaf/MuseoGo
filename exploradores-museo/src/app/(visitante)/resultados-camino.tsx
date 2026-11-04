@@ -156,10 +156,10 @@ export default function ResultadosCaminoScreen() {
                             <Text className="text-lg font-black text-sky-700">{resultados.estadisticas.pistasUsadas}</Text>
                             <Text className="text-[10px] font-bold text-sky-600 uppercase">Pistas</Text>
                         </View>
-                        <View className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl p-3 items-center">
-                            <Ionicons name="refresh-circle-outline" size={18} color="#64748b" />
-                            <Text className="text-lg font-black text-slate-700">{resultados.estadisticas.intentosFallidos}</Text>
-                            <Text className="text-[10px] font-bold text-slate-500 uppercase">Fallos</Text>
+                        <View className="flex-1 bg-red-50 border border-red-100 rounded-2xl p-3 items-center">
+                            <Ionicons name="close-circle" size={18} color="#dc2626" />
+                            <Text className="text-lg font-black text-red-700">{resultados.estadisticas.intentosFallidos}</Text>
+                            <Text className="text-[10px] font-bold text-red-600 uppercase">Fallos</Text>
                         </View>
                         <View className="flex-1 bg-emerald-50 border border-emerald-100 rounded-2xl p-3 items-center">
                             <MaterialCommunityIcons name="star-circle-outline" size={18} color="#059669" />

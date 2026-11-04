@@ -22,7 +22,6 @@ interface Insignia {
   descripcion: string;
   tipo: string;
   activo: boolean;
-  _count?: { otorgadas: number };
 }
 
 export default function InsigniasScreen() {
@@ -120,6 +119,7 @@ export default function InsigniasScreen() {
             try {
               const respuesta = await fetch(`${API_URL}/insignias/${insignia.id}`, { method: 'DELETE' });
               if (respuesta.ok) {
+                setModalVisible(false);
                 cargarInsignias();
               } else {
                 Alert.alert("Error", "Hubo un problema al eliminar la insignia");
@@ -181,43 +181,28 @@ export default function InsigniasScreen() {
           ) : insignias.length === 0 ? (
             <Text className="text-center font-medium text-slate-400">No hay insignias creadas</Text>
           ) : insignias.map((insignia) => (
-            <View
+            <Pressable
               key={insignia.id}
-              className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200"
+              onPress={() => abrirEditar(insignia)}
+              className="bg-white p-4 rounded-2xl border border-slate-200 active:opacity-70"
             >
-              <Pressable
-                onPress={() => abrirEditar(insignia)}
-                className="flex-1 pr-3 active:opacity-70"
-              >
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons name="medal" size={16} color={insignia.activo ? "#d97706" : "#94a3b8"} />
-                  <Text className={`text-base font-bold ml-2 ${insignia.activo ? 'text-slate-700' : 'text-slate-400'}`}>
-                    {insignia.nombre}
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons name="medal" size={16} color={insignia.activo ? "#d97706" : "#94a3b8"} />
+                <Text className={`text-base font-bold ml-2 ${insignia.activo ? 'text-slate-700' : 'text-slate-400'}`}>
+                  {insignia.nombre}
+                </Text>
+              </View>
+              <Text className="text-xs font-medium text-slate-500 mt-1" numberOfLines={2}>
+                {insignia.descripcion}
+              </Text>
+              <View className="flex-row items-center mt-2">
+                <View className="bg-slate-100 px-2 py-0.5 rounded-md">
+                  <Text className="text-[10px] font-bold text-slate-500">
+                    {etiquetaTipo(insignia.tipo)}
                   </Text>
                 </View>
-                <Text className="text-xs font-medium text-slate-500 mt-1" numberOfLines={2}>
-                  {insignia.descripcion}
-                </Text>
-                <View className="flex-row items-center mt-2">
-                  <View className="bg-slate-100 px-2 py-0.5 rounded-md">
-                    <Text className="text-[10px] font-bold text-slate-500">
-                      {etiquetaTipo(insignia.tipo)}
-                    </Text>
-                  </View>
-                  {(insignia._count?.otorgadas ?? 0) > 0 && (
-                    <Text className="text-[10px] font-bold text-amber-700 ml-2">
-                      entregada {insignia._count?.otorgadas} {insignia._count?.otorgadas === 1 ? 'vez' : 'veces'}
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-              <Pressable
-                onPress={() => confirmarEliminar(insignia)}
-                className="p-2 active:bg-red-50 rounded-lg"
-              >
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color="#ef4444" />
-              </Pressable>
-            </View>
+              </View>
+            </Pressable>
           ))}
         </View>
       </ScrollView>
@@ -296,7 +281,14 @@ export default function InsigniasScreen() {
               )}
             </View>
 
-            <View className="pt-5">
+            <View className="pt-5 gap-3">
+              {editable && (
+                <Button
+                  label="Eliminar insignia"
+                  className="w-full bg-red-500 rounded-2xl h-12"
+                  onPress={() => confirmarEliminar(editable)}
+                />
+              )}
               <Button
                 label={editable ? "Guardar cambios" : "Crear insignia"}
                 className="w-full bg-amber-500 rounded-2xl h-14"
