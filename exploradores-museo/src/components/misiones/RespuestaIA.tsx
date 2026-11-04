@@ -12,7 +12,7 @@ interface Mensaje {
     texto: string;
 }
 
-export default function RespuestaIA({ mision, onEvaluar }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void }) {
+export default function RespuestaIA({ mision, onEvaluar, usoPista = false }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void, usoPista?: boolean }) {
     
     const { alias, id: visitanteId } = useVisitanteStore();
     const insets = useSafeAreaInsets();
@@ -53,14 +53,16 @@ export default function RespuestaIA({ mision, onEvaluar }: { mision: any, onEval
                 body: JSON.stringify({
                     visitanteId: visitanteId, 
                     misionId: mision.id,
-                    respuesta: textoUsuario
+                    respuesta: textoUsuario,
+                    usoPista
                 })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100);
+                const factorPista = data.usoPista ? 0.7 : 1;
+                const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100 * factorPista);
 
                 setMensajes(prev => [...prev, {
                     id: (Date.now() + 1).toString(),

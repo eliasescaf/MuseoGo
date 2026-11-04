@@ -7,19 +7,19 @@ import Constants from "expo-constants";
  * - 'local': Conecta a IP local (para testing en tu PC/red)
  * - 'custom': Usa URL personalizada (incluye http/https)
  */
-const BACKEND_MODE = 'custom' as const;
+const BACKEND_MODE = 'custom' as 'local' | 'custom';
 const CUSTOM_BACKEND_URL = 'https://museogo.onrender.com/api'; // Cambiar cuando uses deploy
 
 const debuggerHost = Constants.expoConfig?.hostUri;
 
 let API_URL: string;
 
-if (BACKEND_MODE === 'custom') {
-  API_URL = CUSTOM_BACKEND_URL;
-} else {
+if (BACKEND_MODE === 'local') {
   // Modo local: detecta IP automáticamente
   const ipAutomatica = debuggerHost ? debuggerHost.split(':')[0] : '192.168.18.69';
   API_URL = `http://${ipAutomatica}:3000/api`;
+} else {
+  API_URL = CUSTOM_BACKEND_URL;
 }
 
 console.log('🔗 API URL:', API_URL);

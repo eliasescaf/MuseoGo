@@ -13,6 +13,20 @@ export default function CaminosScreen() {
   const [caminos, setCaminos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
+  const cargarCaminos = () => {
+    setCargando(true);
+    fetch(`${API_URL}/caminos`)
+      .then(response => response.json())
+      .then((data) => {
+        setCaminos(data);
+        setCargando(false);
+      })
+      .catch((error) => {
+        console.error('Error al obtener los caminos:', error);
+        setCargando(false);
+      })
+  }
+
   useFocusEffect(useCallback(() => {
     setCargando(true);
     fetch(`${API_URL}/caminos`)
@@ -83,7 +97,7 @@ export default function CaminosScreen() {
                 </Text>
               </View>
 
-              <View className="items-end gap-2"> 
+              <View className="items-end gap-2">
                 
                 {camino.duracion ? (
                   <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100">

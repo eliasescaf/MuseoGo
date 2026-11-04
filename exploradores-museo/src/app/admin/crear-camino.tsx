@@ -32,6 +32,7 @@ export default function CrearCaminoScreen() {
     setNombre("");
     setDuracion("");
     setDescripcion("");
+    setCaminoRequeridoId(null);
   }, [])
   );
 
@@ -39,6 +40,27 @@ export default function CrearCaminoScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
   const [cargandoMisiones, setCargandoMisiones] = useState(false);
+
+  const [caminosDisponibles, setCaminosDisponibles] = useState<any[]>([]);
+  const [caminoRequeridoId, setCaminoRequeridoId] = useState<number | null>(null);
+  const [modalCaminoVisible, setModalCaminoVisible] = useState(false);
+
+  useEffect(() => {
+    const fetchCaminos = async () => {
+      try {
+        const respuesta = await fetch(`${API_URL}/caminos`);
+        if (respuesta.ok) {
+          const data = await respuesta.json();
+          setCaminosDisponibles(data.filter((c: any) => c.activo));
+        }
+      } catch (error) {
+        console.error("Error al cargar caminos:", error);
+      }
+    };
+    fetchCaminos();
+  }, []);
+
+  const nombreCaminoRequerido = caminosDisponibles.find(c => c.id === caminoRequeridoId)?.nombre;
 
   const guardarCamino = async () => {
     if(!nombre.trim() || !descripcion.trim()){
@@ -59,6 +81,7 @@ export default function CrearCaminoScreen() {
           descripcion: descripcion,
           duracion: parseInt(duracion) || 0,
           activo: true,
+          caminoRequeridoId: caminoRequeridoId,
           misiones: misionesSeleccionadas.map((m, index) => ({
             misionId: m.id,
             orden: index+1
@@ -156,6 +179,39 @@ export default function CrearCaminoScreen() {
               value={duracion}
               onChangeText={setDuracion}
             />
+            <View className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mt-2">
+              <View className="mb-1.5">
+                <Text className="text-xs font-bold text-amber-800">
+                  La dificultad se calcula sola
+                </Text>
+              </View>
+              <View className="gap-0.5">
+                <View className="flex-row items-start">
+                  <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
+                  <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
+                    BAJA: hasta 15 min y hasta 2 misiones
+                  </Text>
+                </View>
+                <View className="flex-row items-start">
+                  <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
+                  <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
+                    MEDIA: hasta 30 min y hasta 4 misiones
+                  </Text>
+                </View>
+                <View className="flex-row items-start">
+                  <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
+                  <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
+                    ALTA: más de eso
+                  </Text>
+                </View>
+                <View className="flex-row items-start mt-0.5">
+                  <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
+                  <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
+                    La duración y la cantidad de misiones que agregués abajo definen el nivel final
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
 
           <View>
@@ -171,6 +227,24 @@ export default function CrearCaminoScreen() {
               className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:border-blue-500"
               style={{ minHeight: 100, textAlignVertical: 'top' }}
             />
+          </View>
+
+          <View>
+            <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
+              Desbloqueo (opcional)
+            </Text>
+            <Pressable
+              onPress={() => setModalCaminoVisible(true)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 flex-row items-center justify-between active:bg-slate-50"
+            >
+              <Text className={nombreCaminoRequerido ? "text-base text-slate-800" : "text-base text-slate-400"}>
+                {nombreCaminoRequerido ?? "Ninguno — disponible siempre"}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color="#64748b" />
+            </Pressable>
+            <Text className="text-xs text-slate-500 mt-2 ml-1">
+              Si elegís un camino, el visitante deberá completarlo antes de poder iniciar este.
+            </Text>
           </View>
 
         </View>
@@ -257,6 +331,49 @@ export default function CrearCaminoScreen() {
                           }
                       />
                   )}
+              </View>
+          </View>
+      </Modal>
+
+      <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalCaminoVisible}
+          onRequestClose={() => setModalCaminoVisible(false)}
+      >
+          <View className="flex-1 justify-end bg-slate-900/50">
+              <View className="bg-white rounded-t-3xl h-2/3 p-6" style={{ paddingBottom: insets.bottom }}>
+                  <View className="flex-row justify-between items-center mb-6">
+                      <View>
+                          <Text className="text-xl font-bold text-slate-800">Camino previo</Text>
+                          <Text className="text-sm text-slate-500">¿Qué debe completar el visitante antes?</Text>
+                      </View>
+                      <Pressable onPress={() => setModalCaminoVisible(false)} className="p-2 bg-slate-100 rounded-full">
+                          <Ionicons name="close" size={24} color="#64748b" />
+                      </Pressable>
+                  </View>
+
+                  <FlatList
+                      data={[{ id: null, nombre: "Ninguno — disponible siempre" }, ...caminosDisponibles]}
+                      keyExtractor={(item: any) => String(item.id)}
+                      showsVerticalScrollIndicator={false}
+                      renderItem={({ item }) => (
+                          <Pressable
+                              onPress={() => {
+                                  setCaminoRequeridoId(item.id);
+                                  setModalCaminoVisible(false);
+                              }}
+                              className={`p-4 rounded-2xl border mb-3 flex-row items-center justify-between ${
+                                  caminoRequeridoId === item.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'
+                              }`}
+                          >
+                              <Text className="text-base font-bold text-slate-700 flex-1">{item.nombre}</Text>
+                              {caminoRequeridoId === item.id && (
+                                  <Ionicons name="checkmark-circle" size={22} color="#2563eb" />
+                              )}
+                          </Pressable>
+                      )}
+                  />
               </View>
           </View>
       </Modal>

@@ -60,6 +60,7 @@ export default function CrearMisionScreen() {
     const [opcionB, setOpcionB] = useState("");
     const [opcionC, setOpcionC] = useState("");
     const [respuestaEsperada, setRespuestaEsperada] = useState("");
+    const [pista, setPista] = useState("");
     const [objetoId, setObjetoId] = useState(null);
 
     const [objetos, setObjetos] = useState([]);
@@ -77,6 +78,7 @@ export default function CrearMisionScreen() {
         setOpcionB("");
         setOpcionC("");
         setRespuestaEsperada("");
+        setPista("");
         setObjetoId(null);
         }, [])
       );
@@ -100,7 +102,8 @@ export default function CrearMisionScreen() {
         descripcion,
         tipo: tipoSeleccionado,
         puntos: parseInt(puntos) || 10,
-        objetoId
+        objetoId,
+        pista: pista.trim() || null
       };
 
       if(tipoSeleccionado === "TRIVIA"){
@@ -234,6 +237,21 @@ export default function CrearMisionScreen() {
                                 placeholder="Ej: 10"
                                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800"
                             />
+                        </View>
+                        <View className="mb-6">
+                            <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Pista (opcional)</Text>
+                            <TextInput
+                                value={pista}
+                                onChangeText={setPista}
+                                placeholder="Ej: Fijate en los materiales del objeto y en cómo se usaba..."
+                                multiline
+                                numberOfLines={3}
+                                className="w-full rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-base text-slate-800"
+                                style={{ minHeight: 80, textAlignVertical: 'top' }}
+                            />
+                            <Text className="text-xs text-slate-500 mt-2 ml-1">
+                                El visitante puede pedirla si falla. Al usarla, gana 30% menos puntos en esa misión.
+                            </Text>
                         </View>
 
                         {(tipoSeleccionado === "QR_OBJETO" || tipoSeleccionado === "EXPLICACION") && (

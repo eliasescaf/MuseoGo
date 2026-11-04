@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView, Image } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +24,8 @@ export default function MisionActivaScreen() {
     const [estadoResolucion, setEstadoResolucion] = useState<EstadoMision>('PENDIENTE');
     const [puntosGanados, setPuntosGanados] = useState(0);
     const [feedbackIA, setFeedbackIA] = useState<string | null>(null);
+    const [pistaUsada, setPistaUsada] = useState(false);
+    const [mostrarPista, setMostrarPista] = useState(false);
 
     useEffect(() => {
         const fetchDatos = async () => {
@@ -33,6 +35,8 @@ export default function MisionActivaScreen() {
             setEstadoResolucion('PENDIENTE');
             setPuntosGanados(0);
             setFeedbackIA(null);
+            setPistaUsada(false);
+            setMostrarPista(false);
             setAnimacionEntrada(true);
             try {
                 // 1. Traer los datos de la misión actual
@@ -65,6 +69,25 @@ export default function MisionActivaScreen() {
         setFeedbackIA(feedback ?? null);
         setPuntosGanados(puntos);
         setEstadoResolucion(estado);
+    };
+
+    const pedirPista = () => {
+        if (!mision?.pista || pistaUsada) return;
+        Alert.alert(
+            'Pedir una pista',
+            'Si usás la pista del curador, vas a ganar un 30% menos de puntos en esta misión. ¿Querés usarla?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Usar pista (−30%)',
+                    style: 'destructive',
+                    onPress: () => {
+                        setPistaUsada(true);
+                        setMostrarPista(true);
+                    }
+                }
+            ]
+        );
     };
 
     // LÓGICA DE ALISTAMIENTO Y TRANSICIÓN
@@ -118,6 +141,26 @@ export default function MisionActivaScreen() {
         );
     }
 
+    const panelPista = mision.pista ? (
+        mostrarPista ? (
+            <View className="mx-6 mt-4 bg-sky-50 border border-sky-200 rounded-2xl p-4">
+                <View className="flex-row items-center mb-2">
+                    <MaterialCommunityIcons name="lightbulb-on" size={18} color="#0284c7" />
+                    <Text className="text-sky-800 font-bold ml-2">Pista del curador</Text>
+                </View>
+                <Text className="text-sm text-sky-800 leading-relaxed">{mision.pista}</Text>
+            </View>
+        ) : (
+            <Pressable
+                onPress={pedirPista}
+                className="mx-6 mt-4 flex-row items-center justify-center bg-sky-50 border border-sky-200 rounded-2xl py-3 active:bg-sky-100"
+            >
+                <MaterialCommunityIcons name="lightbulb-on-outline" size={18} color="#0284c7" />
+                <Text className="text-sky-700 font-bold ml-2">Pedir una pista (−30%)</Text>
+            </Pressable>
+        )
+    ) : null;
+
     return (
         <View key="contenido" className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
             {/* Header para todas las misiones */}
@@ -144,10 +187,12 @@ export default function MisionActivaScreen() {
                                     <Text className="text-2xl font-black text-slate-800 mb-2">{mision.titulo}</Text>
                                     <Text className="text-base text-slate-600 leading-relaxed">{mision.descripcion}</Text>
                                 </View>
+
+                                {panelPista}
                                 
                                 {/* Cámara ocupa el resto */}
-                                <View className="flex-1">
-                                    <EscanerQR mision={mision} onEvaluar={manejarCompletado} />
+                                <View className="flex-1 mt-4">
+                                    <EscanerQR mision={mision} onEvaluar={manejarCompletado} usoPista={pistaUsada} />
                                 </View>
                             </>
                         ) : (
@@ -158,8 +203,10 @@ export default function MisionActivaScreen() {
                                     <Text className="text-base text-slate-600 leading-relaxed">{mision.descripcion}</Text>
                                 </View>
 
-                                {mision.tipo === 'TRIVIA' && <TriviaOpciones mision={mision} onEvaluar={manejarCompletado} />}
-                                {mision.tipo === 'EXPLICACION' && <RespuestaIA mision={mision} onEvaluar={manejarCompletado} />}
+                                {panelPista}
+
+                                {mision.tipo === 'TRIVIA' && <TriviaOpciones mision={mision} onEvaluar={manejarCompletado} usoPista={pistaUsada} />}
+                                {mision.tipo === 'EXPLICACION' && <RespuestaIA mision={mision} onEvaluar={manejarCompletado} usoPista={pistaUsada} />}
                             </>
                         )}
                     </View>
@@ -183,6 +230,13 @@ export default function MisionActivaScreen() {
                                     ? `Ganaste ${puntosGanados} de ${mision.puntos} puntos.`
                                     : `Obtuviste ${puntosGanados} de ${mision.puntos} puntos.`}
                             </Text>
+
+                            {pistaUsada && (
+                                <View className="flex-row items-center bg-sky-50 border border-sky-200 rounded-full px-3 py-1 mb-4">
+                                    <MaterialCommunityIcons name="lightbulb-on" size={13} color="#0284c7" />
+                                    <Text className="text-[11px] font-bold text-sky-700 ml-1">Pista usada</Text>
+                                </View>
+                            )}
 
                             {/* Feedback QR correcto: mostrar datos históricos */}
                             {mision.tipo === 'QR_OBJETO' && estadoResolucion === 'CORRECTO' && mision.objeto?.datosHistoricos && (

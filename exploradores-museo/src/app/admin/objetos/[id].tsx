@@ -10,6 +10,8 @@ import {API_URL} from "../../../config/api";
 import { createClient } from "@supabase/supabase-js";
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
+import { decode } from 'base64-arraybuffer';
+import * as ImagePicker from "expo-image-picker";
 
 const SUPABASE_URL = "https://goayfftfasoqhqazlrqr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_5wmNWlFry6jaIv1SmHCDFg_Cq-2L3hO"
@@ -29,6 +31,8 @@ export default function DetalleObjetosScreen(){
     const [datosHistoricos, setDatosHistoricos] = useState("");
     const [codigoQr, setCodigoQr] = useState("");
     const [imagenUrl, setImagenUrl] = useState("");
+    const [imagenUrlOriginal, setImagenUrlOriginal] = useState("");
+    const [assetFoto, setAssetFoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
     const [activo, setActivo] = useState(true);
     const qrRef = useRef<any>(null);
 
@@ -54,6 +58,8 @@ export default function DetalleObjetosScreen(){
                     setDatosHistoricos(objeto.datosHistoricos || "");
                     setCodigoQr(objeto.codigoQr);
                     setImagenUrl(objeto.imagenUrl || "");
+                    setImagenUrlOriginal(objeto.imagenUrl || "");
+                    setAssetFoto(null);
                     setActivo(objeto.activo ?? true);
                 } else {
                     Alert.alert("Error", "No se pudo cargar el objeto");
@@ -70,6 +76,112 @@ export default function DetalleObjetosScreen(){
         cargarObjeto();
     }, [id]);
 
+    // ---------- Foto del objeto: agregar o cambiar sin recrear el objeto ----------
+    const elegirFuente = () => {
+        Alert.alert("Foto del objeto", "¿Cómo querés cambiar la foto?", [
+            { text: "Cancelar", style: "cancel" },
+            { text: "Tomar foto", onPress: tomarFoto },
+            { text: "Elegir de la galería", onPress: elegirGaleria },
+        ]);
+    };
+
+    const tomarFoto = async () => {
+        const permiso = await ImagePicker.requestCameraPermissionsAsync();
+        if(!permiso.granted){
+            Alert.alert("Permiso denegado", "No se puede acceder a la cámara");
+            return;
+        }
+        await seleccionarFoto(() => ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+            exif: false,
+        }));
+    };
+
+    const elegirGaleria = async () => {
+        const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if(!permiso.granted){
+            Alert.alert("Permiso denegado", "No se puede acceder a la galería");
+            return;
+        }
+        await seleccionarFoto(() => ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+            exif: false,
+        }));
+    };
+
+    const seleccionarFoto = async (invocar: () => Promise<ImagePicker.ImagePickerResult>) => {
+        const resultado = await invocar();
+        if(!resultado.canceled){
+            const asset = resultado.assets[0];
+            setImagenUrl(asset.uri);
+            setAssetFoto(asset);
+        }
+    };
+
+    const subirFoto = async (): Promise<string> => {
+        if(!assetFoto){
+            throw new Error("No hay foto seleccionada");
+        }
+
+        // Respetamos el formato real de la foto (jpeg/png/webp); la galería puede devolver PNG
+        const mime = assetFoto.mimeType && assetFoto.mimeType.startsWith('image/')
+            ? assetFoto.mimeType
+            : 'image/jpeg';
+        const extension = mime.split('/')[1].replace('jpeg', 'jpg');
+
+        // Nombre único para evitar duplicados si se toca Guardar dos veces
+        const sufijo = Math.random().toString(36).slice(2, 8);
+        const nombreArchivo = `${Date.now()}_${sufijo}_foto.${extension}`;
+
+        const base64 = await FileSystem.readAsStringAsync(assetFoto.uri, {
+            encoding: FileSystem.EncodingType.Base64
+        });
+
+        const {error: errorStorage} = await supabase.storage
+            .from("fotos-objetos")
+            .upload(nombreArchivo, decode(base64), {
+                contentType: mime,
+            });
+
+        if (errorStorage){
+            console.error("Error de Supabase Storage:", errorStorage);
+            throw new Error(errorStorage.message);
+        }
+
+        const {data: publicUrlData} = supabase.storage
+            .from("fotos-objetos")
+            .getPublicUrl(nombreArchivo);
+
+        // Antes de considerarla guardada, comprobamos que el archivo quedó
+        // realmente accesible en el bucket (evita URLs a fotos inexistentes)
+        const respuesta = await fetch(publicUrlData.publicUrl);
+        if (!respuesta.ok) {
+            throw new Error("La foto no quedó disponible en el almacenamiento, intentá de nuevo");
+        }
+
+        return publicUrlData.publicUrl;
+    };
+
+    // Si la foto nueva reemplaza a una anterior del bucket, borramos SOLO el
+    // archivo viejo (con los valores que existían al momento de guardar)
+    const limpiarFotoVieja = async (urlVieja: string, urlNueva: string) => {
+        if (!urlVieja || urlVieja === urlNueva) return;
+        const nombreArchivo = urlVieja.split('/').pop();
+        if(!nombreArchivo) return;
+        const {error} = await supabase.storage
+            .from('fotos-objetos')
+            .remove([nombreArchivo]);
+        if(error){
+            console.error('Error al borrar la foto anterior de Supabase:', error);
+        }
+    };
+
     const editarObjeto = async () => {
       if(!nombre.trim() || !descripcion.trim()){
         Alert.alert("Error", "El nombre y la descripción son obligatorios");
@@ -78,6 +190,18 @@ export default function DetalleObjetosScreen(){
 
       setProcesando(true);
       try{
+        // Si el admin eligió una foto nueva, primero la subimos a Storage
+        let nuevaFotoUrl: string | null = null;
+        if(assetFoto){
+          try {
+            nuevaFotoUrl = await subirFoto();
+          } catch (errorSubida: any) {
+            console.error(errorSubida);
+            Alert.alert("Error de la nube", errorSubida?.message || "No se pudo subir la foto");
+            return;
+          }
+        }
+
         const resultado = await fetch(`${API_URL}/objetos/${id}`, {
           method: 'PUT',
           headers: {
@@ -87,11 +211,23 @@ export default function DetalleObjetosScreen(){
             nombre: nombre,
             descripcion: descripcion,
             datosHistoricos: datosHistoricos,
+            imagenUrl: nuevaFotoUrl,
             activo: activo
           })
         });
 
         if(resultado.ok){
+          // Sincronizamos el estado con la URL definitiva del Storage
+          const urlFinal = nuevaFotoUrl ?? imagenUrlOriginal;
+          setImagenUrl(urlFinal);
+          setImagenUrlOriginal(urlFinal);
+          setAssetFoto(null);
+
+          // Solo si hubo foto nueva, borramos el archivo que quedó sin uso
+          if(nuevaFotoUrl){
+            limpiarFotoVieja(imagenUrlOriginal, nuevaFotoUrl).catch((e) => console.error(e));
+          }
+
           Alert.alert('Exito', 'El objeto fue actualizado exitosamente');
           router.replace("/admin/objetos");
         }else{
@@ -201,16 +337,31 @@ export default function DetalleObjetosScreen(){
 
       <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
         
+        {/* El QR mide ~136px de alto; la foto se amolda a esa misma altura */}
         <View className="flex-row justify-between mb-8">
-          <View className="items-center flex-1 mr-4">
-            {imagenUrl ? (
-              <Image source={{ uri: imagenUrl }} className="h-32 w-full rounded-3xl border border-slate-200" />
-            ) : (
-              <View className="h-32 w-full bg-slate-100 rounded-3xl border border-dashed border-slate-300 items-center justify-center">
-                <MaterialCommunityIcons name="image-off-outline" size={32} color="#94a3b8" />
-              </View>
-            )}
-            <Text className="text-xs font-bold text-slate-500 mt-2">Foto Actual</Text>
+          <View className="flex-1 mr-4">
+            <Pressable
+              onPress={elegirFuente}
+              className="active:opacity-80 w-full"
+              style={{ height: 136 }}
+            >
+              {imagenUrl ? (
+                <Image
+                  source={{ uri: imagenUrl }}
+                  resizeMode="cover"
+                  className="h-full w-full rounded-3xl border border-slate-200"
+                />
+              ) : (
+                <View className="h-full w-full bg-slate-100 rounded-3xl border border-dashed border-slate-300 items-center justify-center">
+                  <MaterialCommunityIcons name="camera-plus" size={32} color="#94a3b8" />
+                </View>
+              )}
+              {imagenUrl && (
+                <View className="absolute bottom-2 right-2 bg-blue-600 rounded-full p-2">
+                  <MaterialCommunityIcons name="camera" size={14} color="white" />
+                </View>
+              )}
+            </Pressable>
           </View>
 
           <View className="items-center bg-white p-3 rounded-3xl border border-emerald-100 shadow-sm flex-1 ml-4 justify-center">

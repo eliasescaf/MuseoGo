@@ -14,11 +14,12 @@ type ResultadoIntento = {
 
 export const evaluarRespuesta = async (req: Request, res: Response) => {
     try {
-        const { visitanteId, misionId, respuesta } = req.body ?? {};
+        const { visitanteId, misionId, respuesta, usoPista } = req.body ?? {};
 
         const visitanteNumerico = Number(visitanteId);
         const misionNumerica = Number(misionId);
         const textoRespuesta = typeof respuesta === "string" ? respuesta.trim() : "";
+        const usoPistaBool = usoPista === true;
 
         if (!Number.isInteger(visitanteNumerico) || visitanteNumerico <= 0) {
             return res.status(400).json({ error: "El visitanteId no es válido" });
@@ -106,6 +107,7 @@ export const evaluarRespuesta = async (req: Request, res: Response) => {
                 correcto: resultado.correcto,
                 feedback: resultado.feedback,
                 evaluadoPorIA: resultado.evaluadoPorIA,
+                usoPista: usoPistaBool,
                 intentoNumero: intentosPrevios + 1,
             },
         });
@@ -117,6 +119,7 @@ export const evaluarRespuesta = async (req: Request, res: Response) => {
             correcto: intento.correcto,
             feedback: intento.feedback,
             evaluadoPorIA: intento.evaluadoPorIA,
+            usoPista: intento.usoPista,
         });
     } catch (error) {
         console.error("Error al evaluar la respuesta:", error);

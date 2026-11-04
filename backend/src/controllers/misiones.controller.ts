@@ -21,7 +21,8 @@ export const createMision = async(req: Request, res: Response) => {
             puntos,
             objetoId,
             opciones,
-            respuestaCorrecta
+            respuestaCorrecta,
+            pista
         } = req.body;
 
         if (!titulo || !tipo) {
@@ -36,7 +37,8 @@ export const createMision = async(req: Request, res: Response) => {
                 puntos: puntos ? Number(puntos) : 10,
                 objetoId: objetoId ? Number(objetoId) : null,
                 opciones: opciones ? JSON.stringify(opciones) : null,
-                respuestaCorrecta: respuestaCorrecta || null
+                respuestaCorrecta: respuestaCorrecta || null,
+                pista: pista?.trim() || null
             }
         });
 
@@ -85,6 +87,7 @@ export const updateMision = async(req: Request, res: Response) => {
             objetoId, 
             opciones, 
             respuestaCorrecta,
+            pista,
             activo 
         } = req.body;
         
@@ -106,7 +109,8 @@ export const updateMision = async(req: Request, res: Response) => {
                 puntos: puntos ? Number(puntos) : 10,
                 objetoId: objetoId ? Number(objetoId) : null,
                 opciones: opciones ? JSON.stringify(opciones) : null,
-                respuestaCorrecta: respuestaCorrecta || null
+                respuestaCorrecta: respuestaCorrecta || null,
+                pista: pista?.trim() || null
             }
         });
 

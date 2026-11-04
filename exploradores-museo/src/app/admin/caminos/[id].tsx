@@ -30,6 +30,28 @@ export default function DetalleCaminoScreen(){
     const [misionesDisponibles, setMisionesDisponibles] = useState<any[]>([]);
     const [cargandoMisiones, setCargandoMisiones] = useState(false);
 
+    const [caminosDisponibles, setCaminosDisponibles] = useState<any[]>([]);
+    const [caminoRequeridoId, setCaminoRequeridoId] = useState<number | null>(null);
+    const [modalCaminoVisible, setModalCaminoVisible] = useState(false);
+
+    const nombreCaminoRequerido = caminosDisponibles.find(c => c.id === caminoRequeridoId)?.nombre;
+
+    useEffect(() => {
+        const fetchCaminos = async () => {
+            try {
+                const respuesta = await fetch(`${API_URL}/caminos`);
+                if (respuesta.ok) {
+                    const data = await respuesta.json();
+                    // Excluimos el camino actual para que no se requiera a sí mismo
+                    setCaminosDisponibles(data.filter((c: any) => c.id !== Number(id)));
+                }
+            } catch (error) {
+                console.error("Error al cargar caminos:", error);
+            }
+        };
+        fetchCaminos();
+    }, [id]);
+
     useEffect(() => {
         const backHandler = BackHandler.addEventListener(
             'hardwareBackPress',
@@ -52,6 +74,7 @@ export default function DetalleCaminoScreen(){
                     setDescripcion(camino.descripcion);
                     setDuracion(camino.duracion ? camino.duracion.toString() : "");
                     setActivo(camino.activo);
+                    setCaminoRequeridoId(camino.caminoRequeridoId ?? null);
 
                     if (camino.misiones) {
                         const misionesMapeadas = camino.misiones.map((relacion: any) => ({
@@ -98,6 +121,7 @@ export default function DetalleCaminoScreen(){
                     descripcion,
                     duracion: Number(duracion),
                     activo,
+                    caminoRequeridoId,
                     misiones: misionesSeleccionadas.map((m, index) => ({
                         misionId: m.id,
                         orden: index + 1
@@ -118,6 +142,38 @@ export default function DetalleCaminoScreen(){
             setProcesando(false);
         }
     }
+
+    const duplicarCamino = () => {
+        Alert.alert(
+            "Duplicar camino",
+            `Se va a crear "${nombre} (Copia)" con las mismas misiones, en pausa hasta que la actives. ¿Continuar?`,
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Duplicar",
+                    onPress: async () => {
+                        setProcesando(true);
+                        try {
+                            const respuesta = await fetch(`${API_URL}/caminos/${id}/duplicar`, { method: 'POST' });
+                            if (respuesta.ok) {
+                                const copia = await respuesta.json();
+                                Alert.alert("Exito", `Se creó "${copia.nombre}". Está inactiva: ajustála y activála cuando quieras.`);
+                                // Abrimos directamente la copia para seguir editando
+                                router.replace(`/admin/caminos/${copia.id}`);
+                            } else {
+                                Alert.alert("Error", "Hubo un problema al duplicar el camino");
+                                setProcesando(false);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            Alert.alert("Error", "No se pudo conectar al servidor");
+                            setProcesando(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const confirmarEliminar = async () => {
         Alert.alert("¿Eliminar camino?", "Esta acción no se puede deshacer", [
@@ -191,7 +247,15 @@ export default function DetalleCaminoScreen(){
                 <Pressable onPress={() => router.replace("/admin/caminos")} className="p-2 -ml-2 active:bg-slate-100 rounded-full">
                     <Ionicons name="arrow-back" size={24} color="#334155" />
                 </Pressable>
-                <Text className="text-lg font-bold text-slate-800 ml-2">Detalle del camino</Text>
+                <Text className="text-lg font-bold text-slate-800 ml-2 flex-1">Detalle del camino</Text>
+                <Pressable
+                    onPress={duplicarCamino}
+                    disabled={procesando}
+                    className="flex-row items-center bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 active:bg-slate-200"
+                >
+                    <Ionicons name="copy-outline" size={15} color="#334155" />
+                    <Text className="text-xs font-bold text-slate-700 ml-1.5">Duplicar</Text>
+                </Pressable>
             </View>
 
             <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
@@ -284,6 +348,22 @@ export default function DetalleCaminoScreen(){
                     </View>
                 </View>
 
+                <View className="py-4 border-t border-slate-100 mt-6">
+                    <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Desbloqueo (opcional)</Text>
+                    <Pressable
+                        onPress={() => setModalCaminoVisible(true)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 flex-row items-center justify-between active:bg-slate-50"
+                    >
+                        <Text className={nombreCaminoRequerido ? "text-base text-slate-800" : "text-base text-slate-400"}>
+                            {nombreCaminoRequerido ?? "Ninguno — disponible siempre"}
+                        </Text>
+                        <Ionicons name="chevron-down" size={18} color="#64748b" />
+                    </Pressable>
+                    <Text className="text-xs text-slate-500 mt-2 ml-1">
+                        Si elegís un camino, el visitante deberá completarlo antes de poder iniciar este.
+                    </Text>
+                </View>
+
                 <View className="flex-row items-center justify-between py-4 border-t border-slate-100 mt-6">
                     <View>
                         <Text className="text-base font-bold text-slate-800">Camino Activo</Text>
@@ -348,6 +428,49 @@ export default function DetalleCaminoScreen(){
                                 }
                             />
                         )}
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalCaminoVisible}
+                onRequestClose={() => setModalCaminoVisible(false)}
+            >
+                <View className="flex-1 justify-end bg-slate-900/50">
+                    <View className="bg-white rounded-t-3xl h-2/3 p-6" style={{ paddingBottom: insets.bottom }}>
+                        <View className="flex-row justify-between items-center mb-6">
+                            <View>
+                                <Text className="text-xl font-bold text-slate-800">Camino previo</Text>
+                                <Text className="text-sm text-slate-500">¿Qué debe completar el visitante antes?</Text>
+                            </View>
+                            <Pressable onPress={() => setModalCaminoVisible(false)} className="p-2 bg-slate-100 rounded-full">
+                                <Ionicons name="close" size={24} color="#64748b" />
+                            </Pressable>
+                        </View>
+
+                        <FlatList
+                            data={[{ id: null, nombre: "Ninguno — disponible siempre" }, ...caminosDisponibles]}
+                            keyExtractor={(item: any) => String(item.id)}
+                            showsVerticalScrollIndicator={false}
+                            renderItem={({ item }) => (
+                                <Pressable
+                                    onPress={() => {
+                                        setCaminoRequeridoId(item.id);
+                                        setModalCaminoVisible(false);
+                                    }}
+                                    className={`p-4 rounded-2xl border mb-3 flex-row items-center justify-between ${
+                                        caminoRequeridoId === item.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'
+                                    }`}
+                                >
+                                    <Text className="text-base font-bold text-slate-700 flex-1">{item.nombre}</Text>
+                                    {caminoRequeridoId === item.id && (
+                                        <Ionicons name="checkmark-circle" size={22} color="#2563eb" />
+                                    )}
+                                </Pressable>
+                            )}
+                        />
                     </View>
                 </View>
             </Modal>

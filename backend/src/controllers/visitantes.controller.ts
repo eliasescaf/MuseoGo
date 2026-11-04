@@ -1,5 +1,6 @@
 import {Request, Response} from 'express';
 import {prisma} from '../prisma';
+import {evaluarInsignias} from '../utils/insignias';
 
 export const registrarVisitante = async (req: Request, res: Response) => {
     try{
@@ -96,6 +97,15 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
             camino.misiones.map(m => [m.misionId, m.mision?.puntos ?? 0])
         );
 
+        // La vuelta actual arranca cuando completó este camino por última vez.
+        // Así las estadísticas y las insignias reflejan este recorrido y no todos
+        // los intentos históricos (antes, repetir el camino impedía ganar insignias).
+        const completadoPrevio = await prisma.caminoCompletado.findUnique({
+            where: { visitanteId_caminoId: { visitanteId, caminoId } },
+            select: { completadoEn: true }
+        });
+        const desdeUltimaVuelta = completadoPrevio?.completadoEn ?? null;
+
         const intentosExitosos = await prisma.intentoMision.findMany({
             where: {
                 visitanteId: visitanteId,
@@ -106,27 +116,70 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // El intento guarda el puntaje de la IA (0-100); convertimos a puntos proporcionales
-        const puntosGanados = intentosExitosos.reduce(
-            (sum, intento) => sum + Math.round((puntosMision.get(intento.misionId) ?? 0) * intento.puntaje / 100),
-            0
-        );
-        const misionesCorrectas = intentosExitosos.length;
-
-        await prisma.caminoCompletado.upsert({
+        const todosLosIntentos = await prisma.intentoMision.findMany({
             where: {
-                visitanteId_caminoId: { visitanteId, caminoId }
+                visitanteId: visitanteId,
+                misionId: { in: misionIds }
             },
-            update: {
-                puntosGanados,
-                completadoEn: new Date()
-            },
-            create: {
-                visitanteId,
-                caminoId,
-                puntosGanados
-            }
+            orderBy: { createdAt: 'asc' }
         });
+
+        // El intento guarda el puntaje de la IA (0-100); convertimos a puntos proporcionales.
+        // Si el visitante usó la pista, se aplica la penalización del 30%.
+        const puntosGanados = intentosExitosos.reduce((sum, intento) => {
+            const factorPista = intento.usoPista ? 0.7 : 1;
+            return sum + Math.round((puntosMision.get(intento.misionId) ?? 0) * intento.puntaje / 100 * factorPista);
+        }, 0);
+        const misionesCorrectas = intentosExitosos.length;
+        const puntosPosibles = camino.misiones.reduce((sum, m) => sum + (m.mision?.puntos ?? 0), 0);
+
+        // Estadísticas de la sesión para el resumen: solo los intentos de esta vuelta.
+        const intentosDeLaVuelta = desdeUltimaVuelta
+            ? todosLosIntentos.filter(i => i.createdAt > desdeUltimaVuelta)
+            : todosLosIntentos;
+        // Al reabrir los resultados de un camino ya completado no hay intentos nuevos:
+        // usamos el acumulado para que la pantalla siga mostrando sus números.
+        const intentosParaResumen = intentosDeLaVuelta.length > 0 ? intentosDeLaVuelta : todosLosIntentos;
+
+        const pistasUsadas = intentosParaResumen.filter(i => i.usoPista).length;
+        const intentosFallidos = intentosParaResumen.filter(i => !i.correcto).length;
+        // Misión "perfecta": el primer intento de esa misión en la vuelta fue correcto
+        // y con puntaje >= 70. Debajo de 70 la IA la considera parcial (aunque sume puntos),
+        // así que no cuenta para esta insignia.
+        const primerIntentoPorMision = new Map<number, (typeof intentosParaResumen)[number]>();
+        for (const intento of intentosParaResumen) {
+            if (!primerIntentoPorMision.has(intento.misionId)) {
+                primerIntentoPorMision.set(intento.misionId, intento);
+            }
+        }
+        const misionesPerfectas = [...primerIntentoPorMision.values()]
+            .filter(i => i.correcto && i.puntaje >= 70).length;
+
+        // Caminos que este camino desbloquea (VIS13)
+        const desbloqueados = await prisma.camino.findMany({
+            where: { caminoRequeridoId: caminoId, activo: true },
+            select: { id: true, nombre: true, descripcion: true, duracion: true }
+        });
+
+        // Si es una revisita de los resultados (sin intentos nuevos) no movemos la fecha
+        // de completado, que es el inicio de la próxima vuelta.
+        const esRevisita = !!completadoPrevio && intentosDeLaVuelta.length === 0;
+        if (!esRevisita) {
+            await prisma.caminoCompletado.upsert({
+                where: {
+                    visitanteId_caminoId: { visitanteId, caminoId }
+                },
+                update: {
+                    puntosGanados,
+                    completadoEn: new Date()
+                },
+                create: {
+                    visitanteId,
+                    caminoId,
+                    puntosGanados
+                }
+            });
+        }
 
         const todosLosCaminos = await prisma.caminoCompletado.findMany({
             where: { visitanteId }
@@ -139,12 +192,28 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
             data: { puntosTotales }
         });
 
+        // Insignias por estadísticas del camino (VIS11): se otorgan solo las nuevas
+        const insigniasObtenidas = await evaluarInsignias(visitanteId, caminoId, {
+            pistasUsadas,
+            intentosFallidos,
+            misionesPerfectas,
+            totalMisiones: misionIds.length
+        });
+
         return res.json({
             camino: { titulo: camino.nombre },
             puntosGanados,
+            puntosPosibles,
             misionesCorrectas,
             totalMisiones: misionIds.length,
-            puntosTotalesHistoricos: puntosTotales
+            puntosTotalesHistoricos: puntosTotales,
+            estadisticas: {
+                pistasUsadas,
+                intentosFallidos,
+                misionesPerfectas
+            },
+            insigniasObtenidas,
+            desbloqueados
         });
 
     } catch (error) {

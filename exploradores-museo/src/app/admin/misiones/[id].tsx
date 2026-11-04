@@ -35,6 +35,7 @@ export default function DetalleMisionScreen(){
     const [opcionB, setOpcionB] = useState("");
     const [opcionC, setOpcionC] = useState("");
     const [respuestaEsperada, setRespuestaEsperada] = useState("");
+    const [pista, setPista] = useState("");
     const [objetoId, setObjetoId] = useState<number | null>(null);
 
     const [objetos, setObjetos] = useState([]);
@@ -68,6 +69,7 @@ export default function DetalleMisionScreen(){
                     setPuntos(mision.puntos ? mision.puntos.toString() : "10");
                     setObjetoId(mision.objetoId || null);
                     setNombreObjeto(mision.objeto?.nombre || "");
+                    setPista(mision.pista || "");
 
                     if (mision.tipo === "TRIVIA" && mision.opciones) {
                         const arrayOpciones = typeof mision.opciones === 'string' ? JSON.parse(mision.opciones) : mision.opciones;
@@ -114,6 +116,7 @@ export default function DetalleMisionScreen(){
             tipo: tipoSeleccionado,
             puntos: parseInt(puntos) || 10,
             objetoId,
+            pista: pista.trim() || null,
             activo
         };
 
@@ -262,6 +265,20 @@ export default function DetalleMisionScreen(){
 
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Puntos de recompensa</Text>
                     <TextInput value={puntos} onChangeText={setPuntos} keyboardType="numeric" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800" />
+
+                    <Text className="text-sm font-bold text-slate-700 mb-2 ml-1 mt-4">Pista (opcional)</Text>
+                    <TextInput
+                        value={pista}
+                        onChangeText={setPista}
+                        placeholder="Ej: Fijate en los materiales del objeto y en cómo se usaba..."
+                        multiline
+                        numberOfLines={3}
+                        className="w-full rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-base text-slate-800"
+                        style={{ minHeight: 80, textAlignVertical: 'top' }}
+                    />
+                    <Text className="text-xs text-slate-500 mt-2 ml-1">
+                        Si el visitante la usa, gana 30% menos puntos en esta misión.
+                    </Text>
                 </View>
 
                 <View className="pt-6 border-t border-slate-200">

@@ -4,11 +4,13 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../../config/api';
+import { useVisitanteStore } from '../../../store/useVisitanteStore';
 
 export default function DetalleCaminoScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { id: visitanteId } = useVisitanteStore();
     
     const [camino, setCamino] = useState<any>(null);
     const [cargando, setCargando] = useState(true);
@@ -18,9 +20,9 @@ export default function DetalleCaminoScreen() {
             const fetchDetalleCamino = async () => {
                 setCargando(true);
                 try {
-                    const response = await fetch(`${API_URL}/caminos/${id}`);
+                    const query = visitanteId ? `?visitanteId=${visitanteId}` : '';
+                    const response = await fetch(`${API_URL}/caminos/${id}${query}`);
                     const data = await response.json();
-                    console.log(data)
                     setCamino(data);
                 } catch (error) {
                     console.error('Error fetching detalle camino:', error);
@@ -29,7 +31,7 @@ export default function DetalleCaminoScreen() {
                 }
             };
             fetchDetalleCamino();
-        }, [id])
+        }, [id, visitanteId])
     );
 
     if (cargando) {
@@ -89,6 +91,20 @@ export default function DetalleCaminoScreen() {
                         )}
                     </View>
                 </View>
+
+                {camino.bloqueado && (
+                    <View className="mx-6 mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex-row items-start">
+                        <Ionicons name="lock-closed" size={18} color="#b45309" />
+                        <View className="flex-1 ml-3">
+                            <Text className="font-bold text-amber-800">Camino bloqueado</Text>
+                            <Text className="text-sm text-amber-700 mt-1">
+                                {camino.caminoRequerido?.nombre
+                                    ? `Para iniciar este camino primero tenés que completar "${camino.caminoRequerido.nombre}".`
+                                    : 'Para iniciar este camino primero tenés que completar el camino anterior.'}
+                            </Text>
+                        </View>
+                    </View>
+                )}
 
                 <View className="px-6 py-6">
                     <Text className="text-base text-slate-600 leading-relaxed">
@@ -150,18 +166,21 @@ export default function DetalleCaminoScreen() {
                 <View className="px-6 pt-4" style={{ paddingBottom: insets.bottom + 16 }}>
                     <Pressable
                         onPress={() => {
+                            if (camino.bloqueado) return;
                             const primera = [...(camino.misiones ?? [])].sort((a: any, b: any) => a.orden - b.orden)[0];
                             router.push(`/(visitante)/mision-activa/${primera.misionId}?caminoId=${camino.id}`);
                         }}
-                        disabled={!camino.misiones?.length}
+                        disabled={camino.bloqueado || !camino.misiones?.length}
                         className={`h-14 rounded-2xl items-center justify-center shadow-sm flex-row ${
-                            camino.misiones?.length ? 'bg-blue-600 active:bg-blue-700' : 'bg-slate-300'
+                            !camino.bloqueado && camino.misiones?.length ? 'bg-blue-600 active:bg-blue-700' : 'bg-slate-300'
                         }`}
                     >
                         <Text className="text-white font-bold text-lg mr-2">
-                            Iniciar Camino
+                            {camino.bloqueado ? 'Camino bloqueado' : 'Iniciar Camino'}
                         </Text>
-                        {camino.misiones?.length > 0 && (
+                        {camino.bloqueado ? (
+                            <Ionicons name="lock-closed" size={18} color="white" />
+                        ) : camino.misiones?.length > 0 && (
                             <Ionicons name="play" size={20} color="white" />
                         )}
                     </Pressable>

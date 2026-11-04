@@ -7,7 +7,7 @@ import { useVisitanteStore } from '../../store/useVisitanteStore';
 import { API_URL } from '../../config/api';
 import type { ResultadoMision } from '../../types/mision';
 
-export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void }) {
+export default function EscanerQR({ mision, onEvaluar, usoPista = false }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void, usoPista?: boolean }) {
     const [permiso, pedirPermiso] = useCameraPermissions();
     const { id: visitanteId } = useVisitanteStore();
     const insets = useSafeAreaInsets();
@@ -54,6 +54,7 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
                     visitanteId,
                     misionId: mision.id,
                     respuesta: data?.trim() || '',
+                    usoPista,
                 }),
             });
 
@@ -67,7 +68,8 @@ export default function EscanerQR({ mision, onEvaluar }: { mision: any, onEvalua
             }
 
             const correcto = (resultado.puntaje ?? 0) >= 100;
-            const puntos = Math.round(((mision.puntos ?? 0) * (resultado.puntaje ?? 0)) / 100);
+            const factorPista = resultado.usoPista ? 0.7 : 1;
+            const puntos = Math.round(((mision.puntos ?? 0) * (resultado.puntaje ?? 0)) / 100 * factorPista);
 
             setTimeout(() => {
                 onEvaluar({

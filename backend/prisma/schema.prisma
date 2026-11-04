@@ -14,8 +14,13 @@ model Camino {
   duracion    Int
   activo      Boolean @default(false)
 
+  caminoRequeridoId Int?
+  caminoRequerido   Camino?  @relation("CaminoDesbloqueo", fields: [caminoRequeridoId], references: [id], onDelete: SetNull)
+  desbloquea        Camino[] @relation("CaminoDesbloqueo")
+
   misiones         CaminoMision[]
   visitantesLogros CaminoCompletado[]
+  insigniasGanadas InsigniaVisitante[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -30,6 +35,7 @@ model Mision {
   puntos            Int     @default(10)
   opciones          String?
   respuestaCorrecta String?
+  pista             String?
 
   objetoId Int?
   objeto   Objeto? @relation(fields: [objetoId], references: [id], onDelete: Cascade)
@@ -80,6 +86,7 @@ model Visitante {
 
   intentos          IntentoMision[]
   caminosTerminados CaminoCompletado[]
+  insigniasGanadas  InsigniaVisitante[]
 
   createdAt DateTime @default(now())
 }
@@ -93,6 +100,7 @@ model IntentoMision {
   correcto      Boolean
   feedback      String?
   evaluadoPorIA Boolean  @default(false)
+  usoPista      Boolean  @default(false)
   intentoNumero Int
   createdAt     DateTime @default(now())
 
@@ -113,4 +121,34 @@ model CaminoCompletado {
   camino    Camino    @relation(fields: [caminoId], references: [id], onDelete: Cascade)
 
   @@unique([visitanteId, caminoId])
+}
+
+// Insignias: recompensas por logros (ADM20 / ADM21 / ADM22 / VIS11)
+model Insignia {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  descripcion String
+  // Condición pre-armada: SIN_PISTAS | PERFECTO | SIN_FALLOS
+  tipo        String
+  activo      Boolean @default(true)
+
+  otorgadas InsigniaVisitante[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InsigniaVisitante {
+  id          Int      @id @default(autoincrement())
+  visitanteId Int
+  insigniaId  Int
+  caminoId    Int?
+  otorgadaEn  DateTime @default(now())
+
+  visitante Visitante @relation(fields: [visitanteId], references: [id], onDelete: Cascade)
+  insignia  Insignia  @relation(fields: [insigniaId], references: [id], onDelete: Cascade)
+  camino    Camino?   @relation(fields: [caminoId], references: [id], onDelete: SetNull)
+
+  // La insignia se otorga una sola vez por visitante
+  @@unique([visitanteId, insigniaId])
 }

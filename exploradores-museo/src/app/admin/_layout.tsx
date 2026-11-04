@@ -58,7 +58,18 @@ export default function AdminLayout() {
         }}
       />
 
-      {/* Pestaña 4: Config (Curador IA) */}
+      {/* Pestaña 4: Insignias */}
+      <Tabs.Screen
+        name="insignias"
+        options={{
+          title: "Insignias",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6 name="medal" size={22} color={color as string} />
+          ),
+        }}
+      />
+
+      {/* Pestaña 5: Config (Curador IA) */}
       <Tabs.Screen
         name="config"
         options={{

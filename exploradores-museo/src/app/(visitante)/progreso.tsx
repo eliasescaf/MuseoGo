@@ -6,6 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../config/api';
 import { useVisitanteStore } from '../../store/useVisitanteStore';
 
+type InsigniaData = {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    tipo: string;
+    otorgadaEn: string;
+};
+
 type ProgresoData = {
     alias: string;
     puntosTotales: number;
@@ -30,6 +38,7 @@ export default function ProgresoScreen() {
     const { alias } = useVisitanteStore();
 
     const [progreso, setProgreso] = useState<ProgresoData | null>(null);
+    const [insignias, setInsignias] = useState<InsigniaData[]>([]);
     const [cargando, setCargando] = useState(true);
 
     useFocusEffect(
@@ -45,6 +54,11 @@ export default function ProgresoScreen() {
                     const response = await fetch(`${API_URL}/visitantes/${visitanteId}/progreso`);
                     if (response.ok) {
                         setProgreso(await response.json());
+                    }
+                    // Insignias obtenidas por el visitante (VIS11)
+                    const respInsignias = await fetch(`${API_URL}/insignias/visitante/${visitanteId}`);
+                    if (respInsignias.ok) {
+                        setInsignias(await respInsignias.json());
                     }
                 } catch (error) {
                     console.error('Error fetching progreso:', error);
@@ -97,6 +111,38 @@ export default function ProgresoScreen() {
                             <MaterialCommunityIcons name="star-shooting" size={24} color="white" />
                         </View>
                     </View>
+
+                    {/* Insignias obtenidas (VIS11) */}
+                    {insignias.length > 0 && (
+                        <>
+                            <Text className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">
+                                Insignias obtenidas
+                            </Text>
+                            {insignias.map((insignia) => (
+                                <View
+                                    key={insignia.id}
+                                    className="bg-white rounded-3xl p-4 border border-amber-200 shadow-sm flex-row items-center"
+                                >
+                                    <View className="h-11 w-11 rounded-2xl bg-amber-100 items-center justify-center shrink-0">
+                                        <Ionicons name="medal" size={20} color="#b45309" />
+                                    </View>
+                                    <View className="flex-1 ml-3">
+                                        <View className="flex-row items-center">
+                                            <Text className="text-base font-bold text-slate-800">
+                                                {insignia.nombre}
+                                            </Text>
+                                            <Text className="text-[10px] font-bold text-slate-400 ml-2">
+                                                {formatearFecha(insignia.otorgadaEn)}
+                                            </Text>
+                                        </View>
+                                        <Text className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                                            {insignia.descripcion}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </>
+                    )}
 
                     {!progreso || progreso.caminosCompletados.length === 0 ? (
                         <View className="items-center justify-center py-10">

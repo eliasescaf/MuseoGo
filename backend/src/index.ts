@@ -7,6 +7,7 @@ import misionesRoutes from './routes/misiones.routes';
 import iaRoutes from './routes/ia.routes';
 import visitantesRoutes from './routes/visitantes.routes';
 import adminsRoutes from './routes/admins.routes';
+import insigniasRoutes from './routes/insignias.routes';
 
 
 const app = express()
@@ -34,6 +35,7 @@ app.use('/api/misiones', misionesRoutes);
 app.use('/api/ia', iaRoutes);
 app.use('/api/visitantes', visitantesRoutes);
 app.use('/api/admin', adminsRoutes);
+app.use('/api/insignias', insigniasRoutes);
 
 
 app.listen(PORT, ()=> {

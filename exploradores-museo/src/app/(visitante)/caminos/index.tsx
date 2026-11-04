@@ -9,7 +9,7 @@ import { useVisitanteStore } from '../../../store/useVisitanteStore';
 export default function CaminosVisitanteScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { alias } = useVisitanteStore();
+    const { alias, id: visitanteId } = useVisitanteStore();
 
     const [caminos, setCaminos] = useState([]);
     const [cargando, setCargando] = useState(true);
@@ -19,7 +19,8 @@ export default function CaminosVisitanteScreen() {
             const fetchCaminos = async () => {
                 setCargando(true);
                 try {
-                    const response = await fetch(`${API_URL}/caminos`);
+                    const query = visitanteId ? `?visitanteId=${visitanteId}` : '';
+                    const response = await fetch(`${API_URL}/caminos${query}`);
                     const data = await response.json();
                     const caminosActivos = data.filter((c: any) => c.activo);
                     setCaminos(caminosActivos);
@@ -30,14 +31,20 @@ export default function CaminosVisitanteScreen() {
                 }
             };
             fetchCaminos();
-        }, [])
+        }, [visitanteId])
     );
 
-    const getBadgeDificultad = (minutos: number) => {
-        if (!minutos) return null;
-        if (minutos <= 15) return { texto: 'BAJA', colores: 'text-emerald-700 bg-emerald-100' };
-        if (minutos <= 30) return { texto: 'MEDIA', colores: 'text-amber-700 bg-amber-100' };
-        return { texto: 'ALTA', colores: 'text-rose-700 bg-rose-100' };
+    const getBadgeDificultad = (dificultad?: string) => {
+        switch (dificultad) {
+            case 'BAJA':
+                return { texto: 'BAJA', colores: 'text-emerald-700 bg-emerald-100' };
+            case 'ALTA':
+                return { texto: 'ALTA', colores: 'text-rose-700 bg-rose-100' };
+            case 'MEDIA':
+                return { texto: 'MEDIA', colores: 'text-amber-700 bg-amber-100' };
+            default:
+                return null;
+        }
     };
 
     return (
@@ -68,16 +75,23 @@ export default function CaminosVisitanteScreen() {
                         </View>
                     ) : (
                         caminos.map((camino: any) => {
-                            const badge = getBadgeDificultad(camino.duracion);
+                            const badge = getBadgeDificultad(camino.dificultad);
+                            const bloqueado = camino.bloqueado === true;
                             
                             return (
                                 <Pressable
-                                    onPress={() => router.push({
-                                        pathname: "/(visitante)/caminos/[id]",
-                                        params: { id: camino.id }
-                                    })}
+                                    onPress={() => {
+                                        if (bloqueado) return;
+                                        router.push({
+                                            pathname: "/(visitante)/caminos/[id]",
+                                            params: { id: camino.id }
+                                        });
+                                    }}
                                     key={camino.id}
-                                    className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm active:scale-95 transition-transform"
+                                    disabled={bloqueado}
+                                    className={`bg-white rounded-3xl p-5 border border-slate-200 shadow-sm transition-transform ${
+                                        bloqueado ? 'opacity-60' : 'active:scale-95'
+                                    }`}
                                 >
                                     <View className="flex-row items-start justify-between mb-4">
                                         <View className="flex-1 pr-4">
@@ -87,31 +101,49 @@ export default function CaminosVisitanteScreen() {
                                             <Text className="text-sm text-slate-500 line-clamp-2" numberOfLines={2}>
                                                 {camino.descripcion}
                                             </Text>
+                                            {bloqueado && (
+                                                <View className="flex-row items-center mt-2">
+                                                    <Ionicons name="lock-closed" size={13} color="#64748b" />
+                                                    <Text className="text-xs font-bold text-slate-500 ml-1">
+                                                        {camino.caminoRequerido?.nombre
+                                                            ? `Completá "${camino.caminoRequerido.nombre}" para desbloquearlo`
+                                                            : 'Completá el camino anterior para desbloquearlo'}
+                                                    </Text>
+                                                </View>
+                                            )}
                                         </View>
-                                        <View className="h-12 w-12 rounded-2xl bg-blue-50 items-center justify-center shrink-0">
-                                            <MaterialCommunityIcons name="map-search-outline" size={24} color="#2563eb" />
+                                        <View className={`h-12 w-12 rounded-2xl items-center justify-center shrink-0 ${bloqueado ? 'bg-slate-100' : 'bg-blue-50'}`}>
+                                            <MaterialCommunityIcons
+                                                name={bloqueado ? "lock-outline" : "map-search-outline"}
+                                                size={24}
+                                                color={bloqueado ? "#64748b" : "#2563eb"}
+                                            />
                                         </View>
                                     </View>
 
-                                    {/* Badges de Dificultad Dinámica y Duración[cite: 2] */}
-                                    <View className="flex-row items-center gap-3">
+                                    {/* Badges: misiones, dificultad y duración */}
+                                    <View className="flex-row items-center gap-3 flex-wrap">
+                                        <View className="flex-row items-center bg-slate-100 px-3 py-1.5 rounded-xl">
+                                            <MaterialCommunityIcons name="flag-variant-outline" size={14} color="#64748b" />
+                                            <Text className="text-xs font-bold text-slate-600 ml-1">
+                                                {camino._count?.misiones ?? 0} {camino._count?.misiones === 1 ? 'misión' : 'misiones'}
+                                            </Text>
+                                        </View>
+                                        {badge && (
+                                            <View className={`px-3 py-1.5 rounded-xl ${badge.colores.split(' ')[1]}`}>
+                                                <Text className={`text-xs font-bold ${badge.colores.split(' ')[0]}`}>
+                                                    {badge.texto}
+                                                </Text>
+                                            </View>
+                                        )}
+                                        
                                         {camino.duracion ? (
-                                            <>
-                                                {badge && (
-                                                    <View className={`px-3 py-1.5 rounded-xl ${badge.colores.split(' ')[1]}`}>
-                                                        <Text className={`text-xs font-bold ${badge.colores.split(' ')[0]}`}>
-                                                            {badge.texto}
-                                                        </Text>
-                                                    </View>
-                                                )}
-                                                
-                                                <View className="flex-row items-center bg-slate-100 px-3 py-1.5 rounded-xl">
-                                                    <Ionicons name="time-outline" size={14} color="#64748b" />
-                                                    <Text className="text-xs font-bold text-slate-600 ml-1">
-                                                        {camino.duracion} min
-                                                    </Text>
-                                                </View>
-                                            </>
+                                            <View className="flex-row items-center bg-slate-100 px-3 py-1.5 rounded-xl">
+                                                <Ionicons name="time-outline" size={14} color="#64748b" />
+                                                <Text className="text-xs font-bold text-slate-600 ml-1">
+                                                    {camino.duracion} min
+                                                </Text>
+                                            </View>
                                         ) : null}
                                     </View>
                                 </Pressable>

@@ -6,7 +6,7 @@ import { useVisitanteStore } from '../../store/useVisitanteStore';
 import { API_URL } from '../../config/api';
 import type { ResultadoMision } from '../../types/mision';
 
-export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void }) {
+export default function TriviaOpciones({ mision, onEvaluar, usoPista = false }: { mision: any, onEvaluar: (resultado: ResultadoMision) => void, usoPista?: boolean }) {
     const { id: visitanteId } = useVisitanteStore();
     const insets = useSafeAreaInsets();
     
@@ -38,14 +38,16 @@ export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onE
                 body: JSON.stringify({
                     visitanteId,
                     misionId: mision.id,
-                    respuesta: seleccionada 
+                    respuesta: seleccionada,
+                    usoPista
                 })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100);
+                const factorPista = data.usoPista ? 0.7 : 1;
+                const puntos = Math.round(((mision.puntos ?? 0) * (data.puntaje ?? 0)) / 100 * factorPista);
 
                 setTimeout(() => {
                     onEvaluar({
@@ -66,7 +68,7 @@ export default function TriviaOpciones({ mision, onEvaluar }: { mision: any, onE
 
     return (
         <View className="flex-1 px-2" style={{ paddingBottom: insets.bottom }}>
-            <View className="items-center mb-6">
+            <View className="items-center mt-4 mb-6">
                 <View className="bg-violet-100 px-4 py-1.5 rounded-full flex-row items-center">
                     <MaterialCommunityIcons name="format-list-checks" size={16} color="#8b5cf6" />
                     <Text className="text-xs font-bold text-violet-700 uppercase tracking-widest ml-1">
