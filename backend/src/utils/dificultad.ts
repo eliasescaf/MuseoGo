@@ -1,5 +1,6 @@
-// Dificultad calculada de un camino: promedio entre la duración estimada
-// y la cantidad de misiones. No se guarda en la DB, se deriva en cada consulta.
+// Dificultad calculada de un camino: la define el factor más exigente (regla OR)
+// entre la duración estimada y la cantidad de misiones. No se guarda en la DB,
+// se deriva en cada consulta.
 export type Dificultad = "BAJA" | "MEDIA" | "ALTA";
 
 const indiceDuracion = (duracion: number): number => {
@@ -15,8 +16,10 @@ const indiceMisiones = (cantidadMisiones: number): number => {
 };
 
 export const calcularDificultad = (duracion: number, cantidadMisiones: number): Dificultad => {
-    const promedio = (indiceDuracion(duracion) + indiceMisiones(cantidadMisiones)) / 2;
-    if (promedio <= 1.5) return "BAJA";
-    if (promedio <= 2.5) return "MEDIA";
+    // OR: la dificultad la determina el factor más alto de los dos,
+    // sin promediar (un camino largo es exigente aunque tenga pocas misiones)
+    const indice = Math.max(indiceDuracion(duracion), indiceMisiones(cantidadMisiones));
+    if (indice === 1) return "BAJA";
+    if (indice === 2) return "MEDIA";
     return "ALTA";
 };

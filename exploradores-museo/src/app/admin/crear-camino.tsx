@@ -195,19 +195,19 @@ export default function CrearCaminoScreen() {
                 <View className="flex-row items-start">
                   <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
                   <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
-                    MEDIA: hasta 30 min y hasta 4 misiones
+                    MEDIA: si un factor sube, sin pasar de 30 min ni de 4 misiones
                   </Text>
                 </View>
                 <View className="flex-row items-start">
                   <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
                   <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
-                    ALTA: más de eso
+                    ALTA: si pasa de 30 min o tiene 5 o más misiones
                   </Text>
                 </View>
                 <View className="flex-row items-start mt-0.5">
                   <View className="h-1.5 w-1.5 rounded-full bg-amber-700 mt-1.5 mr-2" />
                   <Text className="flex-1 text-xs text-amber-800/90 leading-relaxed">
-                    La duración y la cantidad de misiones que agregués abajo definen el nivel final
+                    La dificultad la define el factor más exigente: duración o misiones
                   </Text>
                 </View>
               </View>
