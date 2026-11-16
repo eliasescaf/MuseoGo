@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../config/api';
 import { useVisitanteStore } from '../../store/useVisitanteStore';
+import Zoomable from '../../components/Zoomable';
 
 type InsigniaData = {
     id: number;
@@ -36,6 +37,7 @@ export default function ProgresoScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { alias } = useVisitanteStore();
+    const scrollRef = useRef(null);
 
     const [progreso, setProgreso] = useState<ProgresoData | null>(null);
     const [insignias, setInsignias] = useState<InsigniaData[]>([]);
@@ -80,6 +82,7 @@ export default function ProgresoScreen() {
     }
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
 
             <View className="px-6 mb-6">
@@ -96,7 +99,7 @@ export default function ProgresoScreen() {
                 </Text>
             </View>
 
-            <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollRef} className="flex-1 px-6" showsVerticalScrollIndicator={false}>
                 <View className="gap-4 pb-10">
                     <View className="bg-blue-600 rounded-3xl p-5 shadow-sm flex-row items-start justify-between">
                         <View className="flex-1 pr-4">
@@ -156,7 +159,7 @@ export default function ProgresoScreen() {
                             <Pressable
                                 onPress={() => router.push({
                                     pathname: "/(visitante)/resultados-camino",
-                                    params: { caminoId: camino.caminoId }
+                                    params: { caminoId: camino.caminoId, origen: 'progreso' }
                                 })}
                                 key={camino.caminoId}
                                 className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm active:scale-95 transition-transform"
@@ -204,5 +207,6 @@ export default function ProgresoScreen() {
                 </View>
             </ScrollView>
         </View>
+        </Zoomable>
     );
 }

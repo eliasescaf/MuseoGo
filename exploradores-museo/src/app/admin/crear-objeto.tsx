@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect} from "expo-router";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 import * as ImagePicker from "expo-image-picker";
@@ -11,6 +11,7 @@ import { Input } from "../../components/ui/input";
 
 
 import { API_URL } from "../../config/api";
+import Zoomable from "../../components/Zoomable";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://goayfftfasoqhqazlrqr.supabase.co";
@@ -21,6 +22,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 export default function CrearObjetoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -178,6 +180,7 @@ export default function CrearObjetoScreen() {
     }
   }  
   return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
@@ -192,7 +195,7 @@ export default function CrearObjetoScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
         
         <View className="items-center mb-8">
           {imagenUrl ? (
@@ -245,31 +248,37 @@ export default function CrearObjetoScreen() {
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
               Nombre del objeto
             </Text>
-            <Input 
-            placeholder="Ej: Vasija de cerámica Diaguita" 
+            <Input
+            placeholder="Ej: Vasija de cerámica Diaguita"
             value={nombre}
             onChangeText={setNombre}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí el nombre del objeto tal como aparece en el museo.
+            </Text>
           </View>
 
           <View>
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
              Descripción
             </Text>
-            <TextInput 
+            <TextInput
               placeholder="Información corta que leerá el visitante"
               className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:border-blue-500"
               value={descripcion}
               onChangeText={setDescripcion}
               style={{ minHeight: 120, textAlignVertical: 'top' }}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí una descripción corta del objeto (2 o 3 líneas) para el visitante.
+            </Text>
           </View>
 
           <View>
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
              Datos historicos
             </Text>
-            <TextInput 
+            <TextInput
               placeholder="Descripción más extensa que leerá el visitante en la app y que utilizará el Curador IA"
               multiline
               numberOfLines={6}
@@ -278,6 +287,9 @@ export default function CrearObjetoScreen() {
               onChangeText={setDatosHistoricos}
               style={{ minHeight: 120, textAlignVertical: 'top' }}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí los datos históricos completos del objeto (época, origen, uso).
+            </Text>
           </View>
         </View>        
       </ScrollView>
@@ -292,5 +304,6 @@ export default function CrearObjetoScreen() {
       </View>
 
     </View>
+    </Zoomable>
   );
 }

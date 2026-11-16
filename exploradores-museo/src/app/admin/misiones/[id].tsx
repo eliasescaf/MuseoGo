@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Switch, Modal, FlatList, BackHandler } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../../../components/ui/button";
 import { API_URL } from "../../../config/api";
+import Zoomable from "../../../components/Zoomable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 LogBox.ignoreLogs([
@@ -21,6 +22,7 @@ export default function DetalleMisionScreen(){
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const {id} = useLocalSearchParams();
+    const scrollRef = useRef(null);
 
     const [cargando, setCargando] = useState(true);
     const [procesando, setProcesando] = useState(false);
@@ -206,6 +208,7 @@ export default function DetalleMisionScreen(){
     };
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
             
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-slate-100 bg-white">
@@ -217,7 +220,7 @@ export default function DetalleMisionScreen(){
                 </View>
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+            <ScrollView ref={scrollRef} className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 
                 <View className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 mb-6">
                     <View>
@@ -249,7 +252,10 @@ export default function DetalleMisionScreen(){
                 <View className="mb-6">
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Título de la misión</Text>
                     <TextInput value={titulo} onChangeText={setTitulo} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 mb-4" />
-                    
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        Escribí el título corto con el que se va a ver la misión.
+                    </Text>
+                    <View className="h-3" />
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
                         {tipoSeleccionado === "EXPLICACION" ? "Consigna para el visitante" : "Descripción"}
                     </Text>
@@ -262,9 +268,18 @@ export default function DetalleMisionScreen(){
                         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 mb-4"
                         style={{ minHeight: 80, textAlignVertical: 'top' }}
                     />
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        {tipoSeleccionado === "EXPLICACION"
+                            ? "Escribí lo que le vas a pedir que explique al visitante."
+                            : "Escribí de qué trata la misión (puede quedar vacía)."}
+                    </Text>
+                    <View className="h-3" />
 
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Puntos de recompensa</Text>
                     <TextInput value={puntos} onChangeText={setPuntos} keyboardType="numeric" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-800" />
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        Escribí cuántos puntos gana el visitante al completarla (solo el número).
+                    </Text>
 
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1 mt-4">Pista (opcional)</Text>
                     <TextInput
@@ -302,9 +317,24 @@ export default function DetalleMisionScreen(){
 
                     {tipoSeleccionado === "TRIVIA" && (
                         <View className="gap-3">
-                            <TextInput value={opcionA} onChangeText={setOpcionA} placeholder="Opción A (Correcta)" className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base" />
-                            <TextInput value={opcionB} onChangeText={setOpcionB} placeholder="Opción B (Falsa)" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base" />
-                            <TextInput value={opcionC} onChangeText={setOpcionC} placeholder="Opción C (Falsa)" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base" />
+                            <View>
+                                <TextInput value={opcionA} onChangeText={setOpcionA} placeholder="Opción A (Correcta)" className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base" />
+                                <Text className="text-xs text-slate-400 mt-1 ml-1">
+                                    Escribí la respuesta correcta de la trivia acá.
+                                </Text>
+                            </View>
+                            <View>
+                                <TextInput value={opcionB} onChangeText={setOpcionB} placeholder="Opción B (Falsa)" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base" />
+                                <Text className="text-xs text-slate-400 mt-1 ml-1">
+                                    Escribí una respuesta incorrecta para la trivia.
+                                </Text>
+                            </View>
+                            <View>
+                                <TextInput value={opcionC} onChangeText={setOpcionC} placeholder="Opción C (Falsa)" className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base" />
+                                <Text className="text-xs text-slate-400 mt-1 ml-1">
+                                    Escribí otra respuesta incorrecta para la trivia.
+                                </Text>
+                            </View>
                         </View>
                     )}
 
@@ -399,5 +429,6 @@ export default function DetalleMisionScreen(){
                 </View>
             </Modal>
         </View>
+        </Zoomable>
     );
 }

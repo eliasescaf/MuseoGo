@@ -1,11 +1,13 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
+import Zoomable from "../components/Zoomable";
 
 export default function IndexScreen() {
   const router = useRouter();
 
   return (
+    <Zoomable>
     <View className="flex-1 bg-sky-50 pt-12">
 
       <View className="px-8 mb-4">
@@ -82,5 +84,6 @@ export default function IndexScreen() {
         </View>
       </View>
     </View>
+    </Zoomable>
   );
 }

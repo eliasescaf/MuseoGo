@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, BackHandler } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../config/api';
 import { useVisitanteStore } from '../../store/useVisitanteStore';
+import Zoomable from '../../components/Zoomable';
 
 type InsigniaObtenida = {
     id: number;
@@ -26,10 +27,11 @@ type Estadisticas = {
 };
 
 export default function ResultadosCaminoScreen() {
-    const { caminoId } = useLocalSearchParams();
+    const { caminoId, origen } = useLocalSearchParams();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { id: visitanteId, alias } = useVisitanteStore();
+    const scrollRef = useRef(null);
 
     const [cargando, setCargando] = useState(true);
     const [resultados, setResultados] = useState({
@@ -41,8 +43,29 @@ export default function ResultadosCaminoScreen() {
         puntosTotalesHistoricos: 0,
         estadisticas: { pistasUsadas: 0, intentosFallidos: 0, misionesPerfectas: 0 } as Estadisticas,
         insigniasObtenidas: [] as InsigniaObtenida[],
+        insigniasNuevas: [] as InsigniaObtenida[],
         desbloqueados: [] as Desbloqueado[],
     });
+    // Multijugador: posición en el ranking del grupo, si hay una sala activa de este camino
+    const [salaInfo, setSalaInfo] = useState<{
+        id: number;
+        codigo: string;
+        estado: string;
+        posicion: number;
+        total: number;
+        puntos: number;
+    } | null>(null);
+
+    // Si se entró desde Mi Progreso, el atrás del sistema vuelve al progreso
+    // (sin esto, el sistema te largaba a la tab Explorar).
+    useEffect(() => {
+        if (origen !== 'progreso') return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            router.replace('/(visitante)/progreso');
+            return true;
+        });
+        return () => sub.remove();
+    }, [origen, router]);
 
     useEffect(() => {
         const fetchResultados = async () => {
@@ -65,7 +88,30 @@ export default function ResultadosCaminoScreen() {
                         },
                         desbloqueados: data.desbloqueados || [],
                         insigniasObtenidas: data.insigniasObtenidas || [],
+                        insigniasNuevas: data.insigniasNuevas || [],
                     });
+                }
+
+                // Multijugador: si hay una sala activa de este camino, traigo la
+                // posición en el ranking del grupo para mostrarla acá
+                if (visitanteId) {
+                    const salaResponse = await fetch(`${API_URL}/salas/activa/${visitanteId}`);
+                    const sala = await salaResponse.json();
+                    if (sala?.id && sala?.camino?.id === Number(caminoId)) {
+                        const detalleSala = await fetch(`${API_URL}/salas/${sala.id}`).then(r => r.json());
+                        const filas = [...(detalleSala.participantes ?? [])].sort(
+                            (a: any, b: any) => b.puntos - a.puntos
+                        );
+                        const mias = filas.find((p: any) => p.visitanteId === visitanteId);
+                        setSalaInfo({
+                            id: sala.id,
+                            codigo: sala.codigo,
+                            estado: detalleSala.estado ?? sala.estado,
+                            posicion: filas.findIndex((p: any) => p.visitanteId === visitanteId) + 1,
+                            total: filas.length,
+                            puntos: mias?.puntos ?? 0,
+                        });
+                    }
                 }
             } catch (error) {
                 console.error("Error al obtener resultados:", error);
@@ -91,8 +137,10 @@ export default function ResultadosCaminoScreen() {
     }
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-slate-50">
             <ScrollView
+                ref={scrollRef}
                 contentContainerStyle={{
                     paddingHorizontal: 24,
                     paddingTop: insets.top + 32,
@@ -169,12 +217,48 @@ export default function ResultadosCaminoScreen() {
                     </View>
                 </View>
 
-                {/* Insignias recién ganadas: aviso discreto */}
-                {resultados.insigniasObtenidas.length > 0 && (
+                {/* Multijugador: posición en el ranking del grupo */}
+                {salaInfo && (
+                    <View className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
+                        <View className="flex-row items-center">
+                            <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                                <MaterialCommunityIcons name="podium-gold" size={22} color="#2563eb" />
+                            </View>
+                            <View className="flex-1 ml-3">
+                                <Text className="text-blue-900 font-bold">
+                                    Puesto {salaInfo.posicion} de {salaInfo.total} en la sala
+                                </Text>
+                                <Text className="text-xs text-blue-600 mt-0.5">
+                                    {salaInfo.puntos} PTS en el ranking al cerrar tu recorrido · PIN {salaInfo.codigo}
+                                </Text>
+                                <Text className="text-[10px] text-blue-500 mt-0.5">
+                                    El ranking sigue actualizándose en vivo en la sala
+                                </Text>
+                            </View>
+                        </View>
+                        <Pressable
+                            onPress={() => router.push(`/(visitante)/sala/${salaInfo.id}`)}
+                            className="mt-3 bg-blue-600 rounded-xl py-2.5 items-center active:bg-blue-700"
+                        >
+                            <Text className="text-white font-bold text-sm">Ver la sala del grupo</Text>
+                        </Pressable>
+                    </View>
+                )}
+
+                {/* Insignias de este camino: aviso de nueva, o listado si ya las tenía */}
+                {resultados.insigniasNuevas.length > 0 && (
                     <View className="flex-row items-center bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2.5 mb-4">
                         <Ionicons name="medal-outline" size={17} color="#b45309" />
                         <Text className="flex-1 text-amber-800 text-sm ml-3" numberOfLines={2}>
-                            Nueva insignia: {resultados.insigniasObtenidas.map(i => i.nombre).join(', ')}
+                            ¡Nueva insignia! {resultados.insigniasNuevas.map(i => i.nombre).join(', ')}
+                        </Text>
+                    </View>
+                )}
+                {resultados.insigniasNuevas.length === 0 && resultados.insigniasObtenidas.length > 0 && (
+                    <View className="flex-row items-center bg-amber-50/60 border border-amber-100 rounded-2xl px-4 py-2.5 mb-4">
+                        <Ionicons name="medal" size={17} color="#b45309" />
+                        <Text className="flex-1 text-amber-800 text-sm ml-3" numberOfLines={2}>
+                            Insignias de este camino: {resultados.insigniasObtenidas.map(i => i.nombre).join(', ')}
                         </Text>
                     </View>
                 )}
@@ -206,5 +290,6 @@ export default function ResultadosCaminoScreen() {
                 </Pressable>
             </ScrollView>
         </View>
+        </Zoomable>
     );
 }

@@ -102,7 +102,7 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
         // los intentos históricos (antes, repetir el camino impedía ganar insignias).
         const completadoPrevio = await prisma.caminoCompletado.findUnique({
             where: { visitanteId_caminoId: { visitanteId, caminoId } },
-            select: { completadoEn: true }
+            select: { completadoEn: true, puntosGanados: true }
         });
         const desdeUltimaVuelta = completadoPrevio?.completadoEn ?? null;
 
@@ -137,9 +137,20 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
         const intentosDeLaVuelta = desdeUltimaVuelta
             ? todosLosIntentos.filter(i => i.createdAt > desdeUltimaVuelta)
             : todosLosIntentos;
+        // Si ya había completado el camino pero la vuelta actual quedó a mitad
+        // (empezó a repetirlo y no lo terminó), NO pisamos lo guardado: los
+        // puntos y estadísticas de la vuelta anterior siguen siendo los válidos.
+        const correctosEnVuelta = new Set(
+            intentosDeLaVuelta.filter(i => i.correcto).map(i => i.misionId)
+        );
+        const esRevisita = !!completadoPrevio && intentosDeLaVuelta.length === 0;
+        const vueltaIncompleta = !!completadoPrevio && !esRevisita && correctosEnVuelta.size < misionIds.length;
+        const usarGuardados = !!completadoPrevio && (esRevisita || vueltaIncompleta);
         // Al reabrir los resultados de un camino ya completado no hay intentos nuevos:
         // usamos el acumulado para que la pantalla siga mostrando sus números.
-        const intentosParaResumen = intentosDeLaVuelta.length > 0 ? intentosDeLaVuelta : todosLosIntentos;
+        const intentosParaResumen = usarGuardados || intentosDeLaVuelta.length === 0
+            ? todosLosIntentos
+            : intentosDeLaVuelta;
 
         const pistasUsadas = intentosParaResumen.filter(i => i.usoPista).length;
         const intentosFallidos = intentosParaResumen.filter(i => !i.correcto).length;
@@ -161,10 +172,9 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
             select: { id: true, nombre: true, descripcion: true, duracion: true }
         });
 
-        // Si es una revisita de los resultados (sin intentos nuevos) no movemos la fecha
-        // de completado, que es el inicio de la próxima vuelta.
-        const esRevisita = !!completadoPrevio && intentosDeLaVuelta.length === 0;
-        if (!esRevisita) {
+        // Si es una revisita o la vuelta quedó a mitad, no movemos la fecha de
+        // completado (inicio de la próxima vuelta) ni pisamos los puntos guardados.
+        if (!usarGuardados) {
             await prisma.caminoCompletado.upsert({
                 where: {
                     visitanteId_caminoId: { visitanteId, caminoId }
@@ -193,16 +203,33 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
         });
 
         // Insignias por estadísticas del camino (VIS11): se otorgan solo las nuevas
-        const insigniasObtenidas = await evaluarInsignias(visitanteId, caminoId, {
+        const insigniasNuevas = await evaluarInsignias(visitanteId, caminoId, {
             pistasUsadas,
             intentosFallidos,
             misionesPerfectas,
             totalMisiones: misionIds.length
         });
 
+        // Lo que se muestra: los puntos recalculados de la vuelta recién cerrada,
+        // o los guardados si es una revisita / vuelta a mitad (así coinciden con
+        // lo que lista Mi Progreso).
+        const puntosGanadosMostrados = usarGuardados && completadoPrevio
+            ? completadoPrevio.puntosGanados
+            : puntosGanados;
+
+        // Todas las insignias que este visitante ganó en ESTE camino (registradas
+        // con este caminoId): así la pantalla de resultados siempre las muestra,
+        // no solo cuando son recién otorgadas.
+        const insigniasDelCamino = await prisma.insigniaVisitante.findMany({
+            where: { visitanteId, caminoId },
+            include: { insignia: { select: { id: true, nombre: true, descripcion: true } } },
+            orderBy: { otorgadaEn: 'asc' }
+        });
+        const insigniasObtenidas = insigniasDelCamino.map(o => o.insignia);
+
         return res.json({
             camino: { titulo: camino.nombre },
-            puntosGanados,
+            puntosGanados: puntosGanadosMostrados,
             puntosPosibles,
             misionesCorrectas,
             totalMisiones: misionIds.length,
@@ -213,6 +240,7 @@ export const obtenerResultadosCamino = async (req: Request, res: Response) => {
                 misionesPerfectas
             },
             insigniasObtenidas,
+            insigniasNuevas,
             desbloqueados
         });
 

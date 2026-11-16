@@ -6,12 +6,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../config/api';
 import { useAdminStore } from '../store/useAdminStore';
+import Zoomable from '../components/Zoomable';
 
 export default function IngresoAdminScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const [cargando, setCargando] = useState(false);
-    
+
     const [credencial, setCredencial] = useState("");
     const [password, setPassword] = useState("");
     const { login } = useAdminStore();
@@ -24,13 +25,13 @@ export default function IngresoAdminScreen() {
 
         setCargando(true);
         try {
-            const respuesta = await fetch(`${API_URL}/admin/login`, { 
+            const respuesta = await fetch(`${API_URL}/admin/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    identificador: credencial.trim(), 
+                    identificador: credencial.trim(),
                     password: password.trim()
                 })
             });
@@ -39,12 +40,12 @@ export default function IngresoAdminScreen() {
                 const data = await respuesta.json();
                 login(data.id, data.nombre, data.email);
                 Toast.show({
-                    type: 'success', 
+                    type: 'success',
                     text1: '¡Hola de nuevo!',
                     text2: 'Iniciaste sesión como Administrador',
                     position: 'top',
-                    visibilityTime: 3000, 
-                    topOffset: 50, 
+                    visibilityTime: 3000,
+                    topOffset: 50,
                 });
                 router.replace("/admin/caminos");
             } else {
@@ -62,12 +63,14 @@ export default function IngresoAdminScreen() {
     };
 
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-slate-50"
+        <Zoomable>
+        <KeyboardAvoidingView
+        className="flex-1 bg-slate-50"
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
         >
             <View className="flex-1 px-6 justify-center" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-                
+
                 <View className="items-center mb-10">
                     <View className="bg-blue-100 p-6 rounded-full mb-4">
                         <MaterialCommunityIcons name="shield-account-outline" size={64} color="#2563eb" />
@@ -82,29 +85,36 @@ export default function IngresoAdminScreen() {
 
                 <View className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre o Email</Text>
-                    <TextInput 
+                    <TextInput
                         value={credencial}
                         onChangeText={setCredencial}
                         placeholder="Ej: admin o admin@museo.com"
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 mb-6 focus:border-blue-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 focus:border-blue-500 focus:bg-white"
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        Escribí tu nombre de administrador o tu email.
+                    </Text>
+                    <View className="h-5" />
 
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Contraseña</Text>
-                    <TextInput 
+                    <TextInput
                         value={password}
                         onChangeText={setPassword}
-                        secureTextEntry={true} 
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 mb-6 focus:border-blue-500 focus:bg-white"
+                        secureTextEntry={true}
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 focus:border-blue-500 focus:bg-white"
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        Escribí la contraseña que te dio el museo.
+                    </Text>
 
-                    <Pressable 
+                    <Pressable
                         onPress={ingresar}
                         disabled={cargando}
-                        className={`w-full rounded-2xl h-14 items-center justify-center flex-row ${
+                        className={`w-full rounded-2xl h-14 items-center justify-center flex-row mt-4 ${
                             cargando || !credencial.trim() || !password.trim() ? 'bg-blue-300' : 'bg-blue-600 active:bg-blue-700'
                         }`}
                     >
@@ -117,5 +127,6 @@ export default function IngresoAdminScreen() {
 
             </View>
         </KeyboardAvoidingView>
-    ); 
+        </Zoomable>
+    );
 }

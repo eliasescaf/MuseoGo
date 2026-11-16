@@ -1,12 +1,13 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, Alert, Modal, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 
 import { API_URL } from "../../config/api";
+import Zoomable from "../../components/Zoomable";
 
 const TIPOS = [
   { valor: 'SIN_PISTAS', etiqueta: 'Sin pistas', detalle: 'Completó el camino sin pedir ninguna pista' },
@@ -26,6 +27,7 @@ interface Insignia {
 
 export default function InsigniasScreen() {
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   const [insignias, setInsignias] = useState<Insignia[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -135,6 +137,7 @@ export default function InsigniasScreen() {
   };
 
   return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
 
       <View className="px-6 mb-6">
@@ -146,7 +149,7 @@ export default function InsigniasScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} className="flex-1 px-6" showsVerticalScrollIndicator={false}>
 
         <Pressable
           onPress={abrirCrear}
@@ -229,23 +232,6 @@ export default function InsigniasScreen() {
 
             <View className="gap-5">
               <View>
-                <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre de la insignia</Text>
-                <Input placeholder="Ej: Ojo de águila" value={nombre} onChangeText={setNombre} />
-              </View>
-
-              <View>
-                <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Mensaje que ve el visitante</Text>
-                <TextInput
-                  placeholder="Ej: Completaste el camino sin pedir pistas"
-                  multiline
-                  value={descripcion}
-                  onChangeText={setDescripcion}
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900"
-                  style={{ minHeight: 80, textAlignVertical: 'top' }}
-                />
-              </View>
-
-              <View>
                 <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Condición para ganarla</Text>
                 <View className="gap-2">
                   {TIPOS.map((t) => (
@@ -279,6 +265,31 @@ export default function InsigniasScreen() {
                   </Pressable>
                 </View>
               )}
+
+              {/* Últimos campos del form: quedan pegados al teclado en el
+                  bottom-sheet y se ven completos mientras se escribe */}
+              <View>
+                <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre de la insignia</Text>
+                <Input placeholder="Ej: Ojo de águila" value={nombre} onChangeText={setNombre} />
+                <Text className="text-xs text-slate-400 mt-1 ml-1">
+                  Escribí el nombre corto con el que se va a ver la insignia.
+                </Text>
+              </View>
+
+              <View>
+                <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Mensaje que ve el visitante</Text>
+                <TextInput
+                  placeholder="Ej: Completaste el camino sin pedir pistas"
+                  multiline
+                  value={descripcion}
+                  onChangeText={setDescripcion}
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900"
+                  style={{ minHeight: 80, textAlignVertical: 'top' }}
+                />
+                <Text className="text-xs text-slate-400 mt-1 ml-1">
+                  Escribí el texto que el visitante va a leer cuando gane la insignia.
+                </Text>
+              </View>
             </View>
 
             <View className="pt-5 gap-3">
@@ -300,5 +311,6 @@ export default function InsigniasScreen() {
         </View>
       </Modal>
     </View>
+    </Zoomable>
   );
 }

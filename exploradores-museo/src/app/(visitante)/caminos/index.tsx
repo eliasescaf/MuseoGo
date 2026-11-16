@@ -1,18 +1,22 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../../config/api';
 import { useVisitanteStore } from '../../../store/useVisitanteStore';
+import Zoomable from '../../../components/Zoomable';
 
 export default function CaminosVisitanteScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { alias, id: visitanteId } = useVisitanteStore();
+    const scrollRef = useRef(null);
 
     const [caminos, setCaminos] = useState([]);
     const [cargando, setCargando] = useState(true);
+    const [multijugadorOn, setMultijugadorOn] = useState(false);
+    const [salaActiva, setSalaActiva] = useState<number | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -31,6 +35,22 @@ export default function CaminosVisitanteScreen() {
                 }
             };
             fetchCaminos();
+
+            // ADM23: multijugador habilitado por el admin
+            fetch(`${API_URL}/config/MULTIJUGADOR`)
+                .then(r => r.json())
+                .then((data) => setMultijugadorOn(data.valor === 'ON'))
+                .catch(() => setMultijugadorOn(false));
+
+            // Re-entrada: si el visitante tiene una sala activa, se lo avisa
+            if (visitanteId) {
+                fetch(`${API_URL}/salas/activa/${visitanteId}`)
+                    .then(r => r.json())
+                    .then((sala) => setSalaActiva(sala?.id ?? null))
+                    .catch(() => setSalaActiva(null));
+            } else {
+                setSalaActiva(null);
+            }
         }, [visitanteId])
     );
 
@@ -48,6 +68,7 @@ export default function CaminosVisitanteScreen() {
     };
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
             
             <View className="px-6 mb-6">
@@ -62,7 +83,31 @@ export default function CaminosVisitanteScreen() {
                 </Text>
             </View>
 
-            <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+            {multijugadorOn && (
+                <View className="px-6 mb-5">
+                    {salaActiva && (
+                        <Pressable
+                            onPress={() => router.push(`/(visitante)/sala/${salaActiva}`)}
+                            className="flex-row items-center bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 mb-3 active:bg-emerald-100"
+                        >
+                            <MaterialCommunityIcons name="account-group" size={20} color="#059669" />
+                            <Text className="flex-1 text-emerald-800 font-bold text-sm ml-3">
+                                Tenés una sala activa. Tocá para volver al grupo.
+                            </Text>
+                            <Ionicons name="arrow-forward" size={18} color="#059669" />
+                        </Pressable>
+                    )}
+                    <Pressable
+                        onPress={() => router.push('/(visitante)/salas/unirse')}
+                        className="flex-row items-center justify-center bg-white border border-blue-200 rounded-2xl py-3 active:bg-blue-50"
+                    >
+                        <MaterialCommunityIcons name="login-variant" size={18} color="#2563eb" />
+                        <Text className="text-blue-700 font-bold ml-2">Unirme a una sala con PIN</Text>
+                    </Pressable>
+                </View>
+            )}
+
+            <ScrollView ref={scrollRef} className="flex-1 px-6" showsVerticalScrollIndicator={false}>
                 <View className="gap-4 pb-10">
                     {cargando ? (
                         <ActivityIndicator size="large" color="#3B82F6" className="mt-10" />
@@ -153,5 +198,6 @@ export default function CaminosVisitanteScreen() {
                 </View>
             </ScrollView>
         </View>
+        </Zoomable>
     );
 }

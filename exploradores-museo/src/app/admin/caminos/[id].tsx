@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, TextInput, View, Alert, ActivityIndicator, LogBox, Modal, FlatList, BackHandler } from "react-native";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { API_URL } from "../../../config/api";
+import Zoomable from "../../../components/Zoomable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 LogBox.ignoreLogs([
@@ -16,6 +17,7 @@ export default function DetalleCaminoScreen(){
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { id } = useLocalSearchParams();
+    const scrollRef = useRef(null);
 
     const [cargando, setCargando] = useState(true);
     const [procesando, setProcesando] = useState(false);
@@ -252,6 +254,7 @@ export default function DetalleCaminoScreen(){
     }
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
             
             <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
@@ -269,21 +272,27 @@ export default function DetalleCaminoScreen(){
                 </Pressable>
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+            <ScrollView ref={scrollRef} className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
                 <View className="gap-6">
                     <View>
                         <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre del recorrido</Text>
                         <Input placeholder="Ej: Tour Jurásico Interactivo" value={nombre} onChangeText={setNombre} />
+                        <Text className="text-xs text-slate-400 mt-1 ml-1">
+                            Escribí el nombre con el que los visitantes van a ver el recorrido.
+                        </Text>
                     </View>
 
                     <View>
                         <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Duración estimada (minutos)</Text>
                         <Input placeholder="Ej: 45" keyboardType="numeric" value={duracion} onChangeText={setDuracion} />
+                        <Text className="text-xs text-slate-400 mt-1 ml-1">
+                            Escribí cuántos minutos dura el recorrido (solo el número).
+                        </Text>
                     </View>
 
                     <View>
                         <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Descripción</Text>
-                        <TextInput 
+                        <TextInput
                             placeholder="Describe el recorrido y lo que los visitantes aprenderán."
                             multiline
                             numberOfLines={4}
@@ -292,6 +301,9 @@ export default function DetalleCaminoScreen(){
                             className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:border-blue-500"
                             style={{ minHeight: 100, textAlignVertical: 'top' }}
                         />
+                        <Text className="text-xs text-slate-400 mt-1 ml-1">
+                            Escribí una descripción breve del recorrido para que los visitantes sepan de qué trata.
+                        </Text>
                     </View>
                 </View>
 
@@ -486,5 +498,6 @@ export default function DetalleCaminoScreen(){
                 </View>
             </Modal>
         </View>
+        </Zoomable>
     );
 }

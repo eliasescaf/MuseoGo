@@ -21,6 +21,7 @@ model Camino {
   misiones         CaminoMision[]
   visitantesLogros CaminoCompletado[]
   insigniasGanadas InsigniaVisitante[]
+  salas            Sala[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -87,6 +88,8 @@ model Visitante {
   intentos          IntentoMision[]
   caminosTerminados CaminoCompletado[]
   insigniasGanadas  InsigniaVisitante[]
+  salasHost         Sala[]              @relation("SalasHost")
+  salasParticipadas SalaVisitante[]
 
   createdAt DateTime @default(now())
 }
@@ -151,4 +154,39 @@ model InsigniaVisitante {
 
   // La insignia se otorga una sola vez por visitante
   @@unique([visitanteId, insigniaId])
+}
+
+// Configuración del sistema (ADM23): claves como MULTIJUGADOR
+model Configuracion {
+  clave String @id
+  valor String
+}
+
+// Salas de exploración grupal (GRP01-GRP04)
+model Sala {
+  id              Int       @id @default(autoincrement())
+  // PIN de 6 dígitos para unirse
+  codigo          String    @unique
+  caminoId        Int
+  hostVisitanteId Int
+  // ESPERANDO | EN_JUEGO | FINALIZADA
+  estado          String    @default("ESPERANDO")
+  createdAt       DateTime  @default(now())
+  finalizadaEn    DateTime?
+
+  camino        Camino          @relation(fields: [caminoId], references: [id], onDelete: Cascade)
+  host          Visitante       @relation("SalasHost", fields: [hostVisitanteId], references: [id], onDelete: Cascade)
+  participantes SalaVisitante[]
+}
+
+model SalaVisitante {
+  id          Int      @id @default(autoincrement())
+  salaId      Int
+  visitanteId Int
+  unidoEn     DateTime @default(now())
+
+  sala      Sala      @relation(fields: [salaId], references: [id], onDelete: Cascade)
+  visitante Visitante @relation(fields: [visitanteId], references: [id], onDelete: Cascade)
+
+  @@unique([salaId, visitanteId])
 }

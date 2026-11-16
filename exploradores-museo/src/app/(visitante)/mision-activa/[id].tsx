@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, ScrollView, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { API_URL } from '../../../config/api';
 import RespuestaIA from '../../../components/misiones/RespuestaIA';
 import TriviaOpciones from '../../../components/misiones/TriviaOpciones';
 import EscanerQR from '../../../components/misiones/EscanerQR';
+import ChipPuestoSala from '../../../components/misiones/ChipPuestoSala';
 import type { EstadoMision, ResultadoMision } from '../../../types/mision';
 
 export default function MisionActivaScreen() {
@@ -17,10 +18,10 @@ export default function MisionActivaScreen() {
 
     const [mision, setMision] = useState<any>(null);
     const [misionesCamino, setMisionesCamino] = useState<any[]>([]); // Almacena la ruta completa
-    
+
     const [cargandoDatos, setCargandoDatos] = useState(true);
     const [animacionEntrada, setAnimacionEntrada] = useState(true);
-    
+
     const [estadoResolucion, setEstadoResolucion] = useState<EstadoMision>('PENDIENTE');
     const [puntosGanados, setPuntosGanados] = useState(0);
     const [feedbackIA, setFeedbackIA] = useState<string | null>(null);
@@ -169,6 +170,10 @@ export default function MisionActivaScreen() {
                     <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100">
                         <Ionicons name="close" size={24} color="#64748b" />
                     </Pressable>
+                    {/* Multijugador: puesto en la sala, centrado en el header */}
+                    <View className="absolute left-0 right-0 items-center" pointerEvents="box-none">
+                        <ChipPuestoSala />
+                    </View>
                     <View className="bg-blue-100 px-3 py-1 rounded-full flex-row items-center">
                         <MaterialCommunityIcons name="star-circle" size={16} color="#3b82f6" />
                         <Text className="text-blue-700 font-bold text-xs ml-1">{mision.puntos} PTS</Text>
@@ -176,7 +181,14 @@ export default function MisionActivaScreen() {
                 </View>
             )}
 
-            <View className="flex-1">
+        <KeyboardAvoidingView
+          className="flex-1"
+          // Misma receta que admin-login (que funciona en el dispositivo):
+          // behavior padding en ambas plataformas, sin KAV anidados adentro
+          // (RespuestaIA ya no trae el suyo).
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+        >
                 {estadoResolucion === 'PENDIENTE' ? (
                     <View className="flex-1">
                         {/* FLUJO ESPECIAL PARA QR_OBJETO */}
@@ -189,7 +201,7 @@ export default function MisionActivaScreen() {
                                 </View>
 
                                 {panelPista}
-                                
+
                                 {/* Cámara ocupa el resto */}
                                 <View className="flex-1 mt-4">
                                     <EscanerQR mision={mision} onEvaluar={manejarCompletado} usoPista={pistaUsada} />
@@ -286,7 +298,7 @@ export default function MisionActivaScreen() {
                         </View>
                     </View>
                 )}
-            </View>
+            </KeyboardAvoidingView>
         </View>
     );
 }

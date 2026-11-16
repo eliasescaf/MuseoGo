@@ -2,13 +2,15 @@ import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { API_URL } from "../../config/api";
+import Zoomable from "../../components/Zoomable";
 
 export default function MisionesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   const [misiones, setMisiones] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -32,6 +34,7 @@ export default function MisionesScreen() {
   );
 
   return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
       
       <View className="px-6 mb-6">
@@ -43,7 +46,7 @@ export default function MisionesScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         
         <Pressable 
           onPress={() => router.replace("/admin/crear-mision")} 
@@ -125,5 +128,6 @@ export default function MisionesScreen() {
         </View>
       </ScrollView>
     </View>
+    </Zoomable>
   );
 }

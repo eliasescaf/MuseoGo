@@ -7,6 +7,7 @@ import QRCode from "react-native-qrcode-svg";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import {API_URL} from "../../../config/api";
+import Zoomable from "../../../components/Zoomable";
 import { createClient } from "@supabase/supabase-js";
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -35,6 +36,11 @@ export default function DetalleObjetosScreen(){
     const [assetFoto, setAssetFoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
     const [activo, setActivo] = useState(true);
     const qrRef = useRef<any>(null);
+    const qrExportRef = useRef<any>(null);
+    const scrollRef = useRef(null);
+    // Al exportar se renderiza una copia del QR a 512px fuera de pantalla,
+    // porque el PNG del QR en pantalla (~90px) sale borroso al imprimirlo
+    const [qrAltaResolucion, setQrAltaResolucion] = useState(false);
 
     useEffect(() => {
         const backHandler = BackHandler.addEventListener(
@@ -303,7 +309,19 @@ export default function DetalleObjetosScreen(){
         return;
       }
 
-      qrRef.current.toDataURL(async (dataBase64: string) => {
+      // 1) Renderizamos la versión grande del QR y esperamos el frame correspondiente
+      setQrAltaResolucion(true);
+      await new Promise((resolver) => setTimeout(resolver, 300));
+
+      // 2) Capturamos el QR grande (negro sobre blanco, contraste ideal para impreso).
+      // Si el grande no llegó a montar, volvemos al de pantalla para no romper el flujo.
+      const refParaCapturar = qrExportRef.current ?? qrRef.current;
+      if (!refParaCapturar) {
+        setQrAltaResolucion(false);
+        return;
+      }
+      refParaCapturar.toDataURL(async (dataBase64: string) => {
+        setQrAltaResolucion(false);
         try {
           const rutaArchivo = FileSystem.documentDirectory + `QR_${codigoQr}.png`;
           await FileSystem.writeAsStringAsync(rutaArchivo, dataBase64, 
@@ -326,6 +344,7 @@ export default function DetalleObjetosScreen(){
     };
 
     return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
@@ -335,7 +354,24 @@ export default function DetalleObjetosScreen(){
         <Text className="text-lg font-bold text-slate-800 ml-2">Detalle del Objeto</Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+      {/* Copia oculta del QR a 512px: es la que se exporta al guardar el PNG */}
+      {qrAltaResolucion && (
+        <View
+          collapsable={false}
+          pointerEvents="none"
+          style={{ position: 'absolute', left: -1000, top: 0 }}
+        >
+          <QRCode
+            value={codigoQr}
+            getRef={(c) => (qrExportRef.current = c)}
+            size={512}
+            color="#111827"
+            backgroundColor="#ffffff"
+          />
+        </View>
+      )}
+
+      <ScrollView ref={scrollRef} className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
         
         {/* El QR mide ~136px de alto; la foto se amolda a esa misma altura */}
         <View className="flex-row justify-between mb-8">
@@ -393,6 +429,9 @@ export default function DetalleObjetosScreen(){
           <View>
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Nombre del objeto</Text>
             <Input value={nombre} onChangeText={setNombre} />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí el nombre del objeto tal como aparece en el museo.
+            </Text>
           </View>
 
           <View>
@@ -403,6 +442,9 @@ export default function DetalleObjetosScreen(){
               style={{ minHeight: 120, textAlignVertical: 'top' }}
               value={descripcion} onChangeText={setDescripcion}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí una descripción corta del objeto (2 o 3 líneas) para el visitante.
+            </Text>
           </View>
 
           <View>
@@ -413,6 +455,9 @@ export default function DetalleObjetosScreen(){
               style={{ minHeight: 120, textAlignVertical: 'top' }}
               value={datosHistoricos} onChangeText={setDatosHistoricos}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí los datos históricos completos del objeto (época, origen, uso).
+            </Text>
           </View>
         </View>        
       </ScrollView>
@@ -436,5 +481,6 @@ export default function DetalleObjetosScreen(){
       </View>
 
     </View>
+    </Zoomable>
   );
 }

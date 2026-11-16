@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { API_URL } from '../config/api';
 import { useVisitanteStore } from '../store/useVisitanteStore';
+import Zoomable from '../components/Zoomable';
 
 
 export default function IngresoVisitanteScreen() {
@@ -55,6 +56,7 @@ export default function IngresoVisitanteScreen() {
     };
 
     return (
+        <Zoomable>
         <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             className="flex-1 bg-slate-50"
@@ -75,14 +77,18 @@ export default function IngresoVisitanteScreen() {
 
                 <View className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">Tu Alias</Text>
-                    <TextInput 
+                    <TextInput
                         value={alias}
                         onChangeText={setAlias}
                         placeholder="Ej: IndianaJones99"
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 mb-6 focus:border-blue-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base text-slate-800 focus:border-blue-500 focus:bg-white"
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
+                    <Text className="text-xs text-slate-400 mt-1 ml-1">
+                        Escribí el apodo con el que te van a ver otros visitantes (letras, números o guiones).
+                    </Text>
+                    <View className="h-5" />
 
                     <Pressable 
                         onPress={ingresar}
@@ -100,5 +106,6 @@ export default function IngresoVisitanteScreen() {
 
             </View>
         </KeyboardAvoidingView>
+        </Zoomable>
     ); 
 }

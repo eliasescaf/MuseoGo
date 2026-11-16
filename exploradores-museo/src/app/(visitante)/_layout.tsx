@@ -67,6 +67,24 @@ export default function VisitanteLayout() {
                     tabBarStyle: { display: 'none' }
                 }}
             />
+
+            {/* Multijugador (GRP01-GRP04) */}
+            <Tabs.Screen
+                name="salas/unirse"
+                options={{
+                    tabBarButton: () => null,
+                    tabBarItemStyle: { display: 'none' },
+                    tabBarStyle: { display: 'none' }
+                }}
+            />
+            <Tabs.Screen
+                name="sala/[id]"
+                options={{
+                    tabBarButton: () => null,
+                    tabBarItemStyle: { display: 'none' },
+                    tabBarStyle: { display: 'none' }
+                }}
+            />
         </Tabs>
     );
 }

@@ -2,13 +2,15 @@ import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {API_URL} from "../../config/api";
+import Zoomable from "../../components/Zoomable";
 
 export default function CaminosScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   const [caminos, setCaminos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -42,18 +44,29 @@ export default function CaminosScreen() {
   }, [])
   );
   return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top + 20 }}>
       
-      <View className="px-6 mb-6">
-        <Text className="text-3xl font-black text-slate-800 tracking-tight">
-          Caminos
-        </Text>
-        <Text className="text-slate-500 font-semibold mt-1">
-          Gestioná los recorridos temáticos
-        </Text>
+      <View className="px-6 mb-6 flex-row items-center justify-between">
+        <View className="flex-1">
+          <Text className="text-3xl font-black text-slate-800 tracking-tight">
+            Caminos
+          </Text>
+          <Text className="text-slate-500 font-semibold mt-1">
+            Gestioná los recorridos temáticos
+          </Text>
+        </View>
+
+        {/* Acceso a Configuración (ADM23: toggle de multijugador) */}
+        <Pressable
+          onPress={() => router.push("/admin/config")}
+          className="h-11 w-11 items-center justify-center rounded-2xl bg-white border border-slate-200 active:bg-slate-100"
+        >
+          <Ionicons name="settings-outline" size={22} color="#64748b" />
+        </Pressable>
       </View>
 
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         
         <Pressable 
           onPress={() => router.replace("/admin/crear-camino")} 
@@ -119,5 +132,6 @@ export default function CaminosScreen() {
         </View>
       </ScrollView>
     </View>
+    </Zoomable>
   );
 }

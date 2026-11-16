@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ComponentRef } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Keyboard, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVisitanteStore } from '../../store/useVisitanteStore';
@@ -23,6 +23,22 @@ export default function RespuestaIA({ mision, onEvaluar, usoPista = false }: { m
     const [input, setInput] = useState('');
     const [evaluando, setEvaluando] = useState(false);
     const [evaluado, setEvaluado] = useState(false);
+    // Teclado abierto: con él arriba, el padding del KeyboardAvoidingView ya
+    // cubre la barra de navegación del sistema, así que el inset extra acá
+    // se sumaba doble y quedaba una franja blanca grande bajo el input.
+    const [tecladoAbierto, setTecladoAbierto] = useState(false);
+
+    useEffect(() => {
+        const mostrar = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            () => setTecladoAbierto(true)
+        );
+        const ocultar = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setTecladoAbierto(false)
+        );
+        return () => { mostrar.remove(); ocultar.remove(); };
+    }, []);
 
     useEffect(() => {
         setMensajes([{
@@ -99,11 +115,10 @@ export default function RespuestaIA({ mision, onEvaluar, usoPista = false }: { m
     };
     
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1"
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
+        // El teclado lo maneja el KeyboardAvoidingView de la pantalla de misión
+        // (mision-activa); un segundo anidado acá lo doble-ajustaba y tapaba
+        // el input en Android.
+        <View className="flex-1">
             <ScrollView 
                 ref={scrollViewRef}
                 className="flex-1 px-4 py-4"
@@ -158,7 +173,7 @@ export default function RespuestaIA({ mision, onEvaluar, usoPista = false }: { m
 
             <View
                 className="px-4 pt-4 bg-white border-t border-slate-200 flex-row items-end"
-                style={{ paddingBottom: insets.bottom + 16 }}
+                style={{ paddingBottom: tecladoAbierto ? 10 : insets.bottom + 16 }}
             >
                 <TextInput
                     value={input}
@@ -179,6 +194,6 @@ export default function RespuestaIA({ mision, onEvaluar, usoPista = false }: { m
                     <Ionicons name="send" size={20} color={!input.trim() || evaluando || evaluado ? '#94a3b8' : 'white'} style={{ marginLeft: 4 }} />
                 </Pressable>
             </View>
-        </KeyboardAvoidingView>
+        </View>
     );
 }

@@ -1,16 +1,18 @@
 import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, Alert, Modal, ActivityIndicator, FlatList, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 
 import { API_URL } from "../../config/api";
+import Zoomable from "../../components/Zoomable";
 
 export default function CrearCaminoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -139,6 +141,7 @@ export default function CrearCaminoScreen() {
   }
   
   return (
+    <Zoomable scrollRef={scrollRef}>
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       
       <View className="flex-row items-center px-4 py-4 border-b border-slate-100">
@@ -153,7 +156,7 @@ export default function CrearCaminoScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
 
 
         <View className="gap-6 pb-20">
@@ -162,23 +165,29 @@ export default function CrearCaminoScreen() {
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
               Nombre del recorrido
             </Text>
-            <Input 
-              placeholder="Ej: Tour Jurásico Interactivo" 
+            <Input
+              placeholder="Ej: Tour Jurásico Interactivo"
               value={nombre}
               onChangeText={setNombre}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí el nombre con el que los visitantes van a ver el recorrido.
+            </Text>
           </View>
 
           <View>
             <Text className="text-sm font-bold text-slate-700 mb-2 ml-1">
               Duración estimada (minutos)
             </Text>
-            <Input 
-              placeholder="Ej: 45" 
+            <Input
+              placeholder="Ej: 45"
               keyboardType="numeric"
               value={duracion}
               onChangeText={setDuracion}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí cuántos minutos dura el recorrido (solo el número).
+            </Text>
             <View className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mt-2">
               <View className="mb-1.5">
                 <Text className="text-xs font-bold text-amber-800">
@@ -227,6 +236,9 @@ export default function CrearCaminoScreen() {
               className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 focus:border-blue-500"
               style={{ minHeight: 100, textAlignVertical: 'top' }}
             />
+            <Text className="text-xs text-slate-400 mt-1 ml-1">
+              Escribí una descripción breve del recorrido para que los visitantes sepan de qué trata.
+            </Text>
           </View>
 
           <View>
@@ -378,5 +390,6 @@ export default function CrearCaminoScreen() {
           </View>
       </Modal>
     </View>
+    </Zoomable>
   );
 }

@@ -1,19 +1,24 @@
-import { useCallback, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '../../../config/api';
 import { useVisitanteStore } from '../../../store/useVisitanteStore';
+import Zoomable from '../../../components/Zoomable';
 
 export default function DetalleCaminoScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { id: visitanteId } = useVisitanteStore();
+    const scrollRef = useRef(null);
     
     const [camino, setCamino] = useState<any>(null);
     const [cargando, setCargando] = useState(true);
+    const [multijugadorOn, setMultijugadorOn] = useState(false);
+    const [creandoSala, setCreandoSala] = useState(false);
+    const [salaActiva, setSalaActiva] = useState<{ id: number; caminoId?: number } | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -33,6 +38,57 @@ export default function DetalleCaminoScreen() {
             fetchDetalleCamino();
         }, [id, visitanteId])
     );
+
+    // ADM23: la opción de grupo solo aparece si el multijugador está habilitado.
+    // Si ya tenés una sala activa, en vez de "Crear" se muestra "Volver a la sala".
+    useFocusEffect(
+        useCallback(() => {
+            fetch(`${API_URL}/config/MULTIJUGADOR`)
+                .then(r => r.json())
+                .then((data) => setMultijugadorOn(data.valor === 'ON'))
+                .catch(() => setMultijugadorOn(false));
+            if (visitanteId) {
+                fetch(`${API_URL}/salas/activa/${visitanteId}`)
+                    .then(r => r.json())
+                    .then((sala) => setSalaActiva(sala?.id ? { id: sala.id, caminoId: sala.camino?.id } : null))
+                    .catch(() => setSalaActiva(null));
+            } else {
+                setSalaActiva(null);
+            }
+        }, [visitanteId])
+    );
+
+    const crearSala = async () => {
+        if (creandoSala) return;
+        setCreandoSala(true);
+        try {
+            const respuesta = await fetch(`${API_URL}/salas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ caminoId: Number(id), visitanteId })
+            });
+            if (respuesta.status === 409) {
+                // Ya tenía una sala activa: lo llevamos directo
+                const error = await respuesta.json().catch(() => null);
+                if (error?.salaId) {
+                    router.replace(`/(visitante)/sala/${error.salaId}`);
+                    return;
+                }
+            }
+            if (respuesta.ok) {
+                const sala = await respuesta.json();
+                router.replace(`/(visitante)/sala/${sala.id}`);
+            } else {
+                const error = await respuesta.json().catch(() => null);
+                Alert.alert("Error", error?.error ?? "No se pudo crear la sala");
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Error", "No se pudo conectar al servidor");
+        } finally {
+            setCreandoSala(false);
+        }
+    };
 
     if (cargando) {
         return (
@@ -54,9 +110,11 @@ export default function DetalleCaminoScreen() {
     }
 
     return (
+        <Zoomable scrollRef={scrollRef}>
         <View className="flex-1 bg-slate-50">
-            <ScrollView 
-                className="flex-1" 
+            <ScrollView
+                ref={scrollRef}
+                className="flex-1"
                 contentContainerStyle={{ paddingBottom: 120 + insets.bottom }} 
                 showsVerticalScrollIndicator={false}
             >
@@ -164,6 +222,35 @@ export default function DetalleCaminoScreen() {
 
             <View className="absolute bottom-0 w-full bg-white border-t border-slate-200">
                 <View className="px-6 pt-4" style={{ paddingBottom: insets.bottom + 16 }}>
+                    {multijugadorOn && !camino.bloqueado && camino.misiones?.length > 0 && salaActiva && salaActiva.caminoId === Number(id) && (
+                        <Pressable
+                            onPress={() => router.replace(`/(visitante)/sala/${salaActiva.id}`)}
+                            className="h-12 rounded-2xl items-center justify-center flex-row border border-emerald-300 bg-emerald-50 mb-2 active:bg-emerald-100"
+                        >
+                            <MaterialCommunityIcons name="account-group" size={19} color="#059669" />
+                            <Text className="text-emerald-700 font-bold ml-2">
+                                Volver a la sala del grupo
+                            </Text>
+                        </Pressable>
+                    )}
+                    {multijugadorOn && !camino.bloqueado && camino.misiones?.length > 0 && !salaActiva && (
+                        <Pressable
+                            onPress={crearSala}
+                            disabled={creandoSala}
+                            className="h-12 rounded-2xl items-center justify-center flex-row border border-blue-300 bg-blue-50 mb-2 active:bg-blue-100"
+                        >
+                            {creandoSala ? (
+                                <ActivityIndicator color="#2563eb" />
+                            ) : (
+                                <>
+                                    <MaterialCommunityIcons name="account-group" size={19} color="#2563eb" />
+                                    <Text className="text-blue-700 font-bold ml-2">
+                                        Crear sala de grupo
+                                    </Text>
+                                </>
+                            )}
+                        </Pressable>
+                    )}
                     <Pressable
                         onPress={() => {
                             if (camino.bloqueado) return;
@@ -187,5 +274,6 @@ export default function DetalleCaminoScreen() {
                 </View>
             </View>
         </View>
+        </Zoomable>
     );
 }
