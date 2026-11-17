@@ -2,27 +2,22 @@ import Constants from "expo-constants";
 
 /**
  * CONFIGURACIÓN DE URL DEL BACKEND
- * 
- * Opciones:
- * - 'local': Conecta a IP local (para testing en tu PC/red)
- * - 'custom': Usa URL personalizada (incluye http/https)
+ *
+ * - Desarrollo (__DEV__ true, Expo Go / dev client): conecta al backend
+ *   local de la PC, detectando la IP del debugger automáticamente.
+ * - Builds EAS (APK de prueba o producción, __DEV__ false): conecta al
+ *   backend desplegado en Render. Así el APK sirve en cualquier dispositivo
+ *   sin tocar código.
  */
-const BACKEND_MODE = 'local' as 'local' | 'custom';
-const CUSTOM_BACKEND_URL = 'https://museogo.onrender.com/api'; // Cambiar cuando uses deploy
+const CUSTOM_BACKEND_URL = 'https://museogo.onrender.com/api';
 
 const debuggerHost = Constants.expoConfig?.hostUri;
+const ipLocal = debuggerHost ? debuggerHost.split(':')[0] : '192.168.18.69';
 
-let API_URL: string;
+const API_URL = __DEV__
+    ? `http://${ipLocal}:3000/api`
+    : CUSTOM_BACKEND_URL;
 
-if (BACKEND_MODE === 'local') {
-  // Modo local: detecta IP automáticamente
-  const ipAutomatica = debuggerHost ? debuggerHost.split(':')[0] : '192.168.18.69';
-  API_URL = `http://${ipAutomatica}:3000/api`;
-} else {
-  API_URL = CUSTOM_BACKEND_URL;
-}
-
-console.log('🔗 API URL:', API_URL);
-console.log('📡 Debugger Host:', debuggerHost);
+console.log('🔗 API URL:', API_URL, __DEV__ ? '(desarrollo)' : '(build EAS)');
 
 export { API_URL };

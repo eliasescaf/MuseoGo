@@ -109,6 +109,10 @@ export default function DetalleMisionScreen(){
             Alert.alert("Error", "La respuesta esperada no puede estar vacía");
             return;
         }
+        if (tipoSeleccionado === "TRIVIA" && (!opcionA.trim() || !opcionB.trim() || !opcionC.trim())) {
+            Alert.alert("Error", "Las tres opciones de la trivia son obligatorias (la A es la correcta)");
+            return;
+        }
 
         setProcesando(true);
 
