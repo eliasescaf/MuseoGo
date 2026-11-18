@@ -34,6 +34,13 @@
           "imageWidth": 76
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "MuseoGo necesita la cámara para escanear los códigos QR de los objetos del museo.",
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-sharing",
       "expo-font",
       "expo-image",
